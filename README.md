@@ -1,14 +1,14 @@
-# CodeCanvas
+# BlitzBot
 
 **Describe it. Watch it build. Own the code.**
 
-CodeCanvas is an open-source, fully client-side AI coding agent and IDE. You describe an app, a model writes every file live in front of you, a real Node dev server runs it **inside your browser tab** (WebContainers), you hand-edit anything in a Monaco editor, and you ship it to GitHub as a new repo or a pull request.
+BlitzBot is an open-source, fully client-side AI coding agent and IDE. You describe an app, a model writes every file live in front of you, a real Node dev server runs it **inside your browser tab** (WebContainers), you hand-edit anything in a Monaco editor, and you ship it to GitHub as a new repo or a pull request.
 
-There is no backend. No accounts. No telemetry. Your API keys and your code never touch a CodeCanvas server, because there isn't one — verify it in the network tab.
+There is no backend. No accounts. No telemetry. Your API keys and your code never touch a BlitzBot server, because there isn't one — verify it in the network tab.
 
 ## Why this exists
 
-Tools like this usually run your code on someone's hosted sandbox, which means subscriptions, credits, and your code on their machines. CodeCanvas moves the whole loop client-side:
+Tools like this usually run your code on someone's hosted sandbox, which means subscriptions, credits, and your code on their machines. BlitzBot moves the whole loop client-side:
 
 - **BYOK or local** — bring an OpenAI / Anthropic / OpenRouter key, or point it at Ollama / LM Studio and pay nothing.
 - **Every model your key unlocks** — model lists are fetched live from each provider's `/models` endpoint, not hardcoded. New releases show up the day they ship; local models are auto-detected from your Ollama install.
@@ -47,7 +47,7 @@ Run Ollama with CORS opened for the app's origin:
 OLLAMA_ORIGINS=http://localhost:5173 ollama serve
 ```
 
-Then set the Local model URL to `http://localhost:11434/v1` and a model name (e.g. `llama3.1`). Any OpenAI-compatible server (LM Studio, etc.) works the same way.
+Then set the Local model URL to `http://localhost:11434/v1` and choose a model (e.g. `llama3.1`). For **LM Studio**, start its local server in the Developer tab, enable CORS for browser access, and set the URL to `http://localhost:1234/v1`. Keep the `/v1` suffix: the app calls `/models` and `/chat/completions` relative to this base URL.
 
 ### Deploy
 
