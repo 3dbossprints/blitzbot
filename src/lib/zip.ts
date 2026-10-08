@@ -110,7 +110,7 @@ export function downloadZip(files: Record<string, string>, baseName: string): vo
   const blob = makeZip(files);
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `${safe || "codecanvas-project"}.zip`;
+  a.download = `${safe || "blitzbot-project"}.zip`;
   a.click();
   URL.revokeObjectURL(a.href);
 }
