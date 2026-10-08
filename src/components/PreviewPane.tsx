@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useStore } from "../lib/store";
 
 const PHASE_COPY: Record<string, string> = {
@@ -11,19 +12,26 @@ export function PreviewPane() {
   const previewUrl = useStore((s) => s.previewUrl);
   const phase = useStore((s) => s.phase);
   const error = useStore((s) => s.error);
+  const [expanded, setExpanded] = useState(false);
 
   return (
-    <section className="pane preview-pane" aria-label="Live preview">
+    <section className={`pane preview-pane${expanded ? " preview-expanded" : ""}`} aria-label="Live preview">
       <div className="pane-head">
         Preview
         {previewUrl && (
-          <a className="quiet-link" href={previewUrl} target="_blank" rel="noreferrer">
-            open ↗
-          </a>
+          <button
+            className="quiet-link preview-expand"
+            type="button"
+            onClick={() => setExpanded((value) => !value)}
+            aria-label={expanded ? "Exit expanded preview" : "Expand preview"}
+            title={expanded ? "Return to editor" : "Expand preview"}
+          >
+            {expanded ? "close ×" : "expand ↗"}
+          </button>
         )}
       </div>
       {previewUrl ? (
-        <iframe className="preview-frame" src={previewUrl} title="App preview" allow="cross-origin-isolated" />
+        <iframe className="preview-frame" src={previewUrl} title="BlitzBot app preview" allow="cross-origin-isolated" />
       ) : (
         <div className="preview-wait">
           {phase === "error" ? (
