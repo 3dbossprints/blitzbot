@@ -108,10 +108,10 @@ export function Landing() {
     <div className="landing">
       <header className="landing-bar">
         <span className="wordmark">
-          <em>Code</em>Canvas
+          <em>Blitz</em>Bot
         </span>
         <nav className="landing-nav">
-          <a href="https://github.com/yusufkadry/codecanvas" target="_blank" rel="noreferrer" className="quiet-link">
+          <a href="https://github.com/3dbossprints/blitzbot" target="_blank" rel="noreferrer" className="quiet-link">
             Source
           </a>
           <button className="quiet-link as-button" onClick={() => setSettingsOpen(true)}>
