@@ -89,7 +89,7 @@ function endpointFor(o: StreamOpts): { url: string; headers: Record<string, stri
         headers: {
           authorization: `Bearer ${o.keys.openrouter}`,
           "http-referer": location.origin,
-          "x-title": "CodeCanvas",
+          "x-title": "BlitzBot",
         },
       };
     case "ollama": {
