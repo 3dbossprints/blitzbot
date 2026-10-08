@@ -30,7 +30,7 @@ PROJECT REQUIREMENTS:
   - index.html with <div id="root"> and <script type="module" src="/src/main.tsx">.
   - vite.config.ts using @vitejs/plugin-react.
   - src/main.tsx mounting <App /> into #root.
-- Style with a single plain CSS file (src/styles.css) imported from main.tsx. No Tailwind, no CSS frameworks.
+- Default to a single plain CSS file (src/styles.css) imported from main.tsx, but use Tailwind CSS or another requested framework when the user or selected starter asks for it. Install and configure all required dependencies correctly.\n- Backend integrations: when requested or clearly needed, support Supabase using @supabase/supabase-js and Appwrite using the official appwrite SDK. Put browser-safe configuration in environment variables (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_APPWRITE_ENDPOINT, VITE_APPWRITE_PROJECT_ID, VITE_APPWRITE_DATABASE_ID); generate .env.example and clear setup docs. Never embed service-role keys, server secrets, or private API keys in client code. For Supabase, explain schema and Row Level Security policies; for Appwrite, explain collections and permissions. Implement real SDK calls rather than fake backend behavior, with loading, empty, and error states. If credentials are not supplied, scaffold the integration and document how to connect a project.
 - Code must be complete and correct: all imports resolve, no undefined references, TypeScript-clean.
 - Prefer zero extra runtime dependencies unless the task truly requires one.
 
