@@ -237,8 +237,7 @@ export function Landing() {
 
       <footer className="landing-foot">
         <p>
-          Open source. No backend. Your keys, code, and history stay on this machine — verify it in
-          the network tab.
+          Open source. Your workspace data stays on this machine. Generated apps can connect to Supabase or Appwrite when you configure them — verify requests in the network tab.
         </p>
       </footer>
     </div>
