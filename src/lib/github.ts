@@ -95,7 +95,7 @@ export async function pushToNewRepo(opts: {
     name: opts.name,
     private: opts.isPrivate,
     auto_init: false,
-    description: "Built with CodeCanvas",
+    description: "Built with BlitzBot",
   });
 
   onProgress("upload", `0/${Object.keys(opts.files).length} files`);
@@ -270,7 +270,7 @@ export async function openPullRequest(opts: {
   });
 
   onProgress("branch");
-  const branch = `codecanvas/${Date.now().toString(36)}`;
+  const branch = `blitzbot/${Date.now().toString(36)}`;
   await gh(g, "POST", `/repos/${repoFull}/git/refs`, {
     ref: `refs/heads/${branch}`,
     sha: commit.sha,
