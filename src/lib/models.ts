@@ -92,8 +92,16 @@ async function fetchOllama(baseUrl: string): Promise<ModelInfo[]> {
   const base = baseUrl.replace(/\/+$/, "");
   const res = await fetch(`${base}/models`);
   if (!res.ok) throw new Error(`Local server models ${res.status}: ${await safeText(res)}`);
-  const data = (await res.json()) as { data: { id: string }[] };
-  return data.data.map((m) => ({ id: m.id, label: m.id })).sort((a, b) => a.id.localeCompare(b.id));
+  const data = (await res.json()) as { data?: { id?: unknown }[] };
+  if (!Array.isArray(data.data)) {
+    throw new Error(
+      `Unexpected response from ${base}/models. Use an OpenAI-compatible API base URL ending in /v1 (for LM Studio, usually http://localhost:1234/v1; for Ollama, http://localhost:11434/v1).`,
+    );
+  }
+  return data.data
+    .filter((m): m is { id: string } => typeof m?.id === "string" && m.id.length > 0)
+    .map((m) => ({ id: m.id, label: m.id }))
+    .sort((a, b) => a.id.localeCompare(b.id));
 }
 
 async function safeText(res: Response): Promise<string> {
