@@ -3,8 +3,7 @@ import type { ChatEntry } from "./store";
 
 /**
  * On-device project history via IndexedDB (localStorage would cap out fast
- * with file snapshots). Nothing here ever leaves the browser — same trust
- * model as the keys.
+ * with file snapshots). Nothing here ever leaves the browser — project history stays on this device.
  */
 
 const DB_NAME = "codecanvas";
