@@ -11,11 +11,11 @@ export function onServerReady(cb: (url: string) => void) {
 export async function getContainer(): Promise<WebContainer> {
   if (!crossOriginIsolated) {
     throw new Error(
-      "This page isn't cross-origin isolated, so WebContainers can't start. Run via `npm run dev` (headers are preconfigured) or deploy with vercel.json intact.",
+      "This page isn't cross-origin isolated, so WebContainers can't start. Run via `npm run dev` (headers are preconfigured) or deploy with the required cross-origin-isolation headers enabled.",
     );
   }
   if (!instance) {
-    instance = await WebContainer.boot({ workdirName: "codecanvas" });
+    instance = await WebContainer.boot({ workdirName: "blitzbot" });
     instance.on("server-ready", (_port, url) => serverReadyCb?.(url));
     instance.on("error", (err) => console.error("[webcontainer]", err));
   }
