@@ -47,7 +47,7 @@ export function SettingsModal() {
         <p className="trust-note">
           Keys are stored in this browser's localStorage and sent only to the provider you pick.
           Projects and chats are saved on this device (IndexedDB), never uploaded. There is no
-          CodeCanvas server — check the network tab.
+          BlitzBot server — check the network tab.
         </p>
         {error && <p className="modal-error">{error}</p>}
 
@@ -114,7 +114,7 @@ export function SettingsModal() {
             value={keys.ollamaUrl}
             onChange={(e) => setKeys({ ollamaUrl: e.target.value.trim() })}
             onBlur={() => void refreshModels("ollama")}
-            placeholder="http://localhost:11434/v1"
+            placeholder="http://localhost:1234/v1 (LM Studio) or :11434/v1 (Ollama)"
           />
         </label>
         <ModelStatus provider="ollama" />
@@ -140,8 +140,8 @@ export function SettingsModal() {
         )}
         {keys.ollamaUrl && (
           <p className="field-hint">
-            Ollama needs CORS opened for this origin: start it with{" "}
-            <code>OLLAMA_ORIGINS={location.origin} ollama serve</code>
+            <strong>LM Studio:</strong> start the local server in the Developer tab, enable CORS for browser access, and use <code>http://localhost:1234/v1</code>.{" "}
+            <strong>Ollama:</strong> allow this origin with <code>OLLAMA_ORIGINS={location.origin} ollama serve</code> and use <code>http://localhost:11434/v1</code>.
           </p>
         )}
 
