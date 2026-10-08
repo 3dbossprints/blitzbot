@@ -51,7 +51,7 @@ Then set the Local model URL to `http://localhost:11434/v1` and choose a model (
 
 ### Deploy
 
-Static hosting only — Vercel works out of the box (`vercel.json` carries the headers). Cloudflare Pages / Netlify work with equivalent header config.
+Static hosting only — Vercel works out of the box (`vercel.json` carries the required headers), and Netlify is configured in `netlify.toml` with the build command, publish directory, and WebContainer cross-origin-isolation headers. Other hosts must send `Cross-Origin-Embedder-Policy: require-corp` and `Cross-Origin-Opener-Policy: same-origin`. I would test a deployment on the target host before relying on it.
 
 ## Trust model
 
