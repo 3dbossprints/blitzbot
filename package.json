@@ -1,9 +1,9 @@
 {
-  "name": "codecanvas",
+  "name": "blitzbot",
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Open-source, client-side AI coding agent + IDE. Your keys, your browser, zero backend.",
+  "description": "BlitzBot — open-source browser-based AI coding workspace with local model support.",
   "license": "MIT",
   "scripts": {
     "dev": "vite",
