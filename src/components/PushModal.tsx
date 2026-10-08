@@ -87,7 +87,7 @@ export function PushModal() {
           ? "\n**Dependency scan (OSV.dev):** no known vulnerabilities in pinned versions."
           : `\n**Dependency scan (OSV.dev):** ${scan.findings.length} package(s) flagged — see PR checks below.`
         : "";
-    return `Built from the prompt:\n\n> ${prompt}\n\n**Files:** ${Object.keys(files).length}${receiptLine}${scanLine}\n\n---\n*Generated with [CodeCanvas](https://codecanvas.dev) — open-source, client-side AI builder.*`;
+    return `Built from the prompt:\n\n> ${prompt}\n\n**Files:** ${Object.keys(files).length}${receiptLine}${scanLine}\n\n---\n*Generated with [BlitzBot](https://github.com/3dbossprints/blitzbot) — open-source, client-side AI builder.*`;
   }
 
   async function go() {
@@ -104,19 +104,19 @@ export function PushModal() {
           name: repoName.trim(),
           isPrivate,
           files,
-          commitMessage: `CodeCanvas: ${prompt.slice(0, 72) || "initial build"}`,
+          commitMessage: `BlitzBot: ${prompt.slice(0, 72) || "initial build"}`,
           onProgress: (step, detail) => markStep(list, step, detail),
         });
         finishSteps(true);
         setResultUrl(res.repoUrl);
       } else {
         if (!/^[^/\s]+\/[^/\s]+$/.test(repoFull.trim()))
-          throw new Error("Use the owner/repo format, e.g. yusufkadry/myapp.");
+          throw new Error("Use the owner/repo format, e.g. yourname/myapp.");
         const res = await openPullRequest({
           token: keys.github,
           repoFull: repoFull.trim(),
           files,
-          title: `CodeCanvas: ${prompt.slice(0, 72) || "update"}`,
+          title: `BlitzBot: ${prompt.slice(0, 72) || "update"}`,
           body: prBody(),
           onProgress: (step, detail) => markStep(list, step, detail),
         });
@@ -169,7 +169,7 @@ export function PushModal() {
               <input value={repoFull} onChange={(e) => setRepoFull(e.target.value)} placeholder="you/your-repo" disabled={running} />
             </label>
             <p className="field-hint">
-              Changes go to a new <code>codecanvas/…</code> branch and open as a pull request — your
+              Changes go to a new <code>blitzbot/…</code> branch and open as a pull request — your
               default branch is never touched directly.
             </p>
           </>
