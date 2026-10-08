@@ -79,7 +79,7 @@ export function Workspace() {
     <div className="studio">
       <header className="studio-bar">
         <span className="wordmark">
-          <em>Code</em>Canvas
+          <em>Blitz</em>Bot
         </span>
         <span className="studio-project" title={prompt}>
           {prompt || "untitled"}
@@ -93,7 +93,7 @@ export function Workspace() {
           </button>
           <button
             className="btn-ghost btn-sm"
-            onClick={() => downloadZip(files, prompt || "codecanvas-project")}
+            onClick={() => downloadZip(files, prompt || "blitzbot-project")}
             disabled={fileCount === 0}
             title="Download the project as a .zip"
           >
