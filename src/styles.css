@@ -1306,3 +1306,28 @@ button.chip:hover {
     align-items: stretch;
   }
 }
+
+
+/* Expanded preview stays in the current BlitzBot tab so its live WebContainer session remains attached. */
+.preview-expanded {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  background: var(--studio-2);
+}
+.preview-expanded .preview-frame {
+  display: block;
+  width: 100%;
+  min-height: 0;
+  flex: 1;
+}
+.preview-expand {
+  border: 0;
+  background: transparent;
+  padding: 2px 4px;
+  cursor: pointer;
+  font: inherit;
+}
