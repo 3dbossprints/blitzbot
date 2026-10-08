@@ -1331,3 +1331,113 @@ button.chip:hover {
   cursor: pointer;
   font: inherit;
 }
+
+
+/* Template gallery */
+.template-gallery {
+  width: 100%;
+  margin-top: 42px;
+  text-align: left;
+}
+.template-gallery-head {
+  margin-bottom: 22px;
+}
+.template-gallery-head h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 25px;
+  font-weight: 500;
+}
+.template-gallery-head p {
+  color: var(--ash);
+  font-size: 13px;
+  margin: 5px 0 0;
+}
+.template-category {
+  margin: 22px 0 28px;
+}
+.template-category h3 {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: .09em;
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--ash);
+  margin: 0 0 10px;
+}
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.template-card {
+  min-width: 0;
+  text-align: left;
+  overflow: hidden;
+  border: 1px solid var(--linen);
+  border-radius: 10px;
+  padding: 8px;
+  color: var(--graphite);
+  background: rgba(255,255,255,.48);
+  transition: border-color .15s ease, transform .15s ease;
+}
+.template-card:hover, .template-card:focus-visible {
+  border-color: var(--ink);
+  transform: translateY(-2px);
+}
+.template-art {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  height: 104px;
+  padding: 11px;
+  border-radius: 6px;
+  background: linear-gradient(140deg, #e6e3dc, #c9c7c2);
+  overflow: hidden;
+}
+.template-art-bar {
+  height: 8px;
+  width: 42%;
+  border-radius: 3px;
+  background: #55565b;
+  opacity: .8;
+}
+.template-art-line {
+  height: 4px;
+  width: 78%;
+  border-radius: 3px;
+  background: #898a8d;
+}
+.template-art-line.short { width: 52%; }
+.template-art-blocks {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+  flex: 1;
+  margin-top: 2px;
+}
+.template-art-blocks i {
+  display: block;
+  border-radius: 3px;
+  background: rgba(75,77,82,.28);
+}
+.template-art-blocks i:nth-child(2) { background: rgba(75,77,82,.45); }
+.template-card-title {
+  display: block;
+  margin: 10px 2px 3px;
+  font-size: 13px;
+  font-weight: 650;
+}
+.template-card-stack {
+  display: block;
+  margin: 0 2px 3px;
+  color: var(--ash);
+  font-size: 10.5px;
+}
+@media (max-width: 900px) {
+  .template-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .template-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .template-art { height: 86px; }
+}
