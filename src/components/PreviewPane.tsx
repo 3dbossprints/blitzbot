@@ -24,9 +24,10 @@ export function PreviewPane() {
             type="button"
             onClick={() => setExpanded((value) => !value)}
             aria-label={expanded ? "Exit expanded preview" : "Expand preview"}
+            aria-expanded={expanded}
             title={expanded ? "Return to editor" : "Expand preview"}
           >
-            {expanded ? "close ×" : "expand ↗"}
+            {expanded ? "close ×" : "expand ⤢"}
           </button>
         )}
       </div>
