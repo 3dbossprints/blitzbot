@@ -1,24 +1,24 @@
 /**
  * The agent protocol.
  *
- * The model emits complete files inside <cc-file> blocks:
+ * The model emits complete files inside <blitzbot-file> blocks:
  *
- *   <cc-file path="src/App.tsx">
+ *   <blitzbot-file path="src/App.tsx">
  *   ...entire file contents...
- *   </cc-file>
+ *   </blitzbot-file>
  *
  * Anything outside a block is narration and streams into the chat.
  * The parser below is incremental and safe across chunk boundaries.
  */
 
-export const SYSTEM_PROMPT = `You are CodeCanvas, an expert coding agent that builds complete, runnable web apps.
+export const SYSTEM_PROMPT = `You are BlitzBot, an expert coding agent that builds complete, runnable web apps.
 
 OUTPUT PROTOCOL — follow exactly:
 - Start with a 1–3 sentence plan in plain prose.
 - Then emit EVERY file of the project, each inside its own block:
-<cc-file path="relative/path.ext">
+<blitzbot-file path="relative/path.ext">
 (entire file contents, no markdown fences, no truncation, no placeholders)
-</cc-file>
+</blitzbot-file>
 - After the last file, end with one short line saying the app is ready.
 - Never wrap file contents in \`\`\` fences. Never abbreviate with "..." or "rest unchanged".
 
@@ -35,13 +35,13 @@ PROJECT REQUIREMENTS:
 - Prefer zero extra runtime dependencies unless the task truly requires one.
 
 FOLLOW-UP EDITS:
-- When the user asks for changes, re-emit ONLY the files that change, as complete files in <cc-file> blocks. Never emit diffs or partial files.`;
+- When the user asks for changes, re-emit ONLY the files that change, as complete files in <blitzbot-file> blocks. Never emit diffs or partial files.`;
 
-export const IDEATE_PROMPT = `You are CodeCanvas in ideation mode: a sharp, blunt technical cofounder helping plan and reason about a project.
+export const IDEATE_PROMPT = `You are BlitzBot in ideation mode: a sharp, blunt technical cofounder helping plan and reason about a project.
 
 RULES:
 - Discuss architecture, tradeoffs, features, naming, scope — whatever is asked.
-- NEVER emit code files. NEVER use <cc-file> blocks. Small inline snippets (a few lines) are fine when they clarify a point.
+- NEVER emit code files. NEVER use <blitzbot-file> blocks. Small inline snippets (a few lines) are fine when they clarify a point.
 - Be concise and decisive. State a recommendation, then the reasoning. No filler.`;
 
 export function ideateContext(paths: string[]): string {
@@ -68,7 +68,7 @@ export function buildEditContext(files: Record<string, string>): string {
   const MAX = 90_000;
   let out = "CURRENT PROJECT FILES:\n";
   for (const [path, content] of Object.entries(files)) {
-    const next = `\n<cc-file path="${path}">\n${content}\n</cc-file>\n`;
+    const next = `\n<blitzbot-file path="${path}">\n${content}\n</blitzbot-file>\n`;
     if (out.length + next.length > MAX) {
       out += `\n(…${path} and later files omitted for length — ask if you need them…)\n`;
       break;
@@ -86,8 +86,8 @@ export interface ParserCallbacks {
   onFileDone: (path: string, contents: string) => void;
 }
 
-const OPEN_RE = /<cc-file\s+path="([^"]+)"\s*>\r?\n?/;
-const CLOSE_TAG = "</cc-file>";
+const OPEN_RE = /<blitzbot-file\s+path="([^"]+)"\s*>\r?\n?/;
+const CLOSE_TAG = "</blitzbot-file>";
 /** Longest prefix of an open tag we might be holding across a chunk boundary. */
 const HOLDBACK = 80;
 
@@ -157,4 +157,4 @@ export function createStreamParser(cb: ParserCallbacks) {
 export const README_PROMPT = (userPrompt: string, fileList: string[]) =>
   `Write a concise, professional README.md for this project. It was generated from the prompt: "${userPrompt}". Files: ${fileList.join(
     ", ",
-  )}. Include: what it is, quick start (npm install, npm run dev), the stack, and a short file-structure overview. Output ONLY the file via the <cc-file path="README.md"> protocol, nothing else.`;
+  )}. Include: what it is, quick start (npm install, npm run dev), the stack, and a short file-structure overview. Output ONLY the file via the <blitzbot-file path="README.md"> protocol, nothing else.`;
