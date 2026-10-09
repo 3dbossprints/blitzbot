@@ -1,14 +1,16 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useStore } from "./lib/store";
 import { Landing } from "./components/Landing";
 import { Workspace } from "./components/Workspace";
+import { ChatPage } from "./components/ChatPage";
 import { SettingsModal } from "./components/SettingsModal";
 import { PushModal } from "./components/PushModal";
 import { ProjectsDrawer } from "./components/ProjectsDrawer";
 
 export default function App() {
   const phase = useStore((s) => s.phase);
-  const onLanding = phase === "landing";
+  const [page, setPage] = useState<"home" | "build" | "chat">("home");
+  const onLanding = page === "home";
 
   useEffect(() => {
     void useStore.getState().initApp();
@@ -16,7 +18,7 @@ export default function App() {
 
   return (
     <div className={`app ${onLanding ? "app-light" : "app-dark"}`}>
-      {onLanding ? <Landing /> : <Workspace />}
+      {page === "home" ? <Landing onNavigate={setPage} /> : page === "chat" ? <ChatPage onNavigate={setPage} /> : <Workspace onNavigate={setPage} />}
       <SettingsModal />
       <PushModal />
       <ProjectsDrawer />
