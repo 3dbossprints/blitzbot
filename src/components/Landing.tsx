@@ -19,7 +19,6 @@ function ImportForm() {
   const keys = useStore((s) => s.keys);
   const adopt = useStore((s) => s.adoptImportedRepo);
   const [value, setValue] = useState("");
-  const [chatValue, setChatValue] = useState("");
   const [progress, setProgress] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -71,6 +70,7 @@ function ImportForm() {
 
 export function Landing() {
   const [value, setValue] = useState("");
+  const [chatValue, setChatValue] = useState("");
   const [importOpen, setImportOpen] = useState(false);
   const keys = useStore((s) => s.keys);
   const models = useStore((s) => s.models);
@@ -180,6 +180,7 @@ export function Landing() {
         </div>
 
         {mode === "build" && (
+          <>
           <section className="landing-chat-card" aria-label="Chat with AI">
             <div className="landing-chat-copy">
               <span className="landing-chat-eyebrow">HAVE A QUESTION?</span>
@@ -234,6 +235,7 @@ export function Landing() {
               </div>
             ))}
           </section>
+          </>
         )}
 
         <div className="import-row">
