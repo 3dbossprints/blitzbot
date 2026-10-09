@@ -1441,3 +1441,58 @@ button.chip:hover {
   .template-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .template-art { height: 86px; }
 }
+
+/* Dedicated landing-page AI chat */
+.landing-chat-card {
+  display: grid;
+  grid-template-columns: minmax(0, .85fr) minmax(280px, 1.15fr);
+  align-items: center;
+  gap: 24px;
+  margin: 30px 0 38px;
+  padding: 24px;
+  border: 1px solid var(--linen);
+  border-radius: 14px;
+  background: rgba(255,255,255,.72);
+  box-shadow: 0 12px 34px rgba(35, 34, 29, .045);
+}
+.landing-chat-eyebrow {
+  color: var(--ash);
+  font: 10px var(--font-mono);
+  letter-spacing: .12em;
+}
+.landing-chat-copy h2 {
+  margin: 7px 0 6px;
+  font: 500 25px var(--font-display);
+}
+.landing-chat-copy p {
+  margin: 0;
+  color: var(--ash);
+  font-size: 13px;
+  line-height: 1.65;
+}
+.landing-chat-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 7px;
+  border: 1px solid var(--linen);
+  border-radius: 10px;
+  background: #fff;
+}
+.landing-chat-input-row input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 8px;
+  border: 0;
+  outline: 0;
+  color: var(--graphite);
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+}
+.landing-chat-input-row input:focus-visible { outline: 2px solid var(--linen); outline-offset: 2px; }
+@media (max-width: 650px) {
+  .landing-chat-card { grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 18px; }
+  .landing-chat-input-row { align-items: stretch; }
+}
