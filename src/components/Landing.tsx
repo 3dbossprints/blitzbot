@@ -70,7 +70,6 @@ function ImportForm() {
 
 export function Landing({ onNavigate }: { onNavigate: (page: "home" | "build" | "chat") => void }) {
   const [value, setValue] = useState("");
-  const [chatValue, setChatValue] = useState("");
   const [importOpen, setImportOpen] = useState(false);
   const keys = useStore((s) => s.keys);
   const models = useStore((s) => s.models);
@@ -92,19 +91,6 @@ export function Landing({ onNavigate }: { onNavigate: (page: "home" | "build" | 
     value.trim() && keysReady && autoRoute && mode === "build" ? route(value, keys, models) : null;
   const recent = projects.slice(0, 5);
   const compareReady = compareModels.length >= 2;
-
-  function submitChat() {
-    const prompt = chatValue.trim();
-    if (!prompt) return;
-    if (!keysReady) {
-      setSettingsOpen(true);
-      return;
-    }
-    setPref({ mode: "ideate" });
-    setChatValue("");
-    onNavigate("chat");
-    dispatch(prompt);
-  }
 
   function submit() {
     const prompt = value.trim();
