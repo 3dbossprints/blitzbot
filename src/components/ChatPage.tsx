@@ -23,7 +23,7 @@ export function ChatPage({ onNavigate }: { onNavigate: (page: "home" | "build" |
           <h1>Chat with AI</h1>
           <p>Ask questions, brainstorm, and debug without changing your project files.</p>
         </div>
-        <ChatPane />
+        <ChatPane ideateOnly />
       </main>
     </div>
   );
