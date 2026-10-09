@@ -19,6 +19,7 @@ function ImportForm() {
   const keys = useStore((s) => s.keys);
   const adopt = useStore((s) => s.adoptImportedRepo);
   const [value, setValue] = useState("");
+  const [chatValue, setChatValue] = useState("");
   const [progress, setProgress] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -91,6 +92,18 @@ export function Landing() {
     value.trim() && keysReady && autoRoute && mode === "build" ? route(value, keys, models) : null;
   const recent = projects.slice(0, 5);
   const compareReady = compareModels.length >= 2;
+
+  function submitChat() {
+    const prompt = chatValue.trim();
+    if (!prompt) return;
+    if (!keysReady) {
+      setSettingsOpen(true);
+      return;
+    }
+    setPref({ mode: "ideate" });
+    setChatValue("");
+    dispatch(prompt);
+  }
 
   function submit() {
     const prompt = value.trim();
@@ -167,6 +180,26 @@ export function Landing() {
         </div>
 
         {mode === "build" && (
+          <section className="landing-chat-card" aria-label="Chat with AI">
+            <div className="landing-chat-copy">
+              <span className="landing-chat-eyebrow">HAVE A QUESTION?</span>
+              <h2>Chat with AI</h2>
+              <p>Brainstorm ideas, ask coding questions, debug errors, or plan your next feature — without starting a build.</p>
+            </div>
+            <div className="landing-chat-input-row">
+              <input
+                value={chatValue}
+                onChange={(e) => setChatValue(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && submitChat()}
+                placeholder="Ask anything about coding, ideas, or your project…"
+                aria-label="Chat with AI message"
+              />
+              <button className="btn-primary btn-sm" onClick={submitChat} disabled={!chatValue.trim()}>
+                Chat ↗
+              </button>
+            </div>
+          </section>
+
           <section className="template-gallery" aria-label="Starter templates">
             <div className="template-gallery-head">
               <h2>Start with a template</h2>
