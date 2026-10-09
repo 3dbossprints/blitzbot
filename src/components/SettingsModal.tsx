@@ -39,11 +39,11 @@ export function SettingsModal() {
       let response: Response;
       if (kind === "supabase") {
         if (!keys.supabaseUrl.trim() || !keys.supabaseKey.trim()) throw new Error("Enter your Supabase project URL and publishable key first.");
-        const base = keys.supabaseUrl.trim().replace(/\\/+$/, "");
+        const base = keys.supabaseUrl.trim().replace(/\/+$/, "");
         response = await fetch(`${base}/auth/v1/health`, { headers: { apikey: keys.supabaseKey.trim() } });
       } else {
         if (!keys.appwriteEndpoint.trim() || !keys.appwriteProjectId.trim()) throw new Error("Enter your Appwrite endpoint and project ID first.");
-        const base = keys.appwriteEndpoint.trim().replace(/\\/+$/, "");
+        const base = keys.appwriteEndpoint.trim().replace(/\/+$/, "");
         response = await fetch(`${base}/health`, { headers: { "X-Appwrite-Project": keys.appwriteProjectId.trim() } });
       }
       if (!response.ok) throw new Error(`The service replied with HTTP ${response.status}. Check the URL, project settings, and browser CORS/platform configuration.`);
@@ -59,7 +59,7 @@ export function SettingsModal() {
     const lines = [
       keys.supabaseUrl.trim() ? `VITE_SUPABASE_URL=${keys.supabaseUrl.trim()}` : "",
       keys.supabaseKey.trim() ? `VITE_SUPABASE_ANON_KEY=${keys.supabaseKey.trim()}` : "",
-      keys.appwriteEndpoint.trim() && keys.appwriteProjectId.trim() ? `VITE_APPWRITE_ENDPOINT=${keys.appwriteEndpoint.trim()}\\nVITE_APPWRITE_PROJECT_ID=${keys.appwriteProjectId.trim()}` : "",
+      keys.appwriteEndpoint.trim() && keys.appwriteProjectId.trim() ? `VITE_APPWRITE_ENDPOINT=${keys.appwriteEndpoint.trim()}\nVITE_APPWRITE_PROJECT_ID=${keys.appwriteProjectId.trim()}` : "",
     ].filter(Boolean);
     if (!lines.length) {
       setBackendStatus("Enter at least one backend configuration before applying it.");
@@ -73,8 +73,8 @@ export function SettingsModal() {
       managed.set("VITE_APPWRITE_ENDPOINT", keys.appwriteEndpoint.trim());
       managed.set("VITE_APPWRITE_PROJECT_ID", keys.appwriteProjectId.trim());
     }
-    const untouched = existing.split("\\n").filter((line) => !managed.has(line.split("=", 1)[0]));
-    editFile(".env.local", [...untouched.filter(Boolean), ...Array.from(managed, ([key, value]) => `${key}=${value}`)].join("\\n") + "\\n");
+    const untouched = existing.split("\n").filter((line) => !managed.has(line.split("=", 1)[0]));
+    editFile(".env.local", [...untouched.filter(Boolean), ...Array.from(managed, ([key, value]) => `${key}=${value}`)].join("\n") + "\n");
     setBackendStatus("Added backend settings to .env.local in the current project. Restart the dev server to load the new environment variables.");
   }
 
