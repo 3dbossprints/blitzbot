@@ -68,7 +68,7 @@ function ImportForm() {
   );
 }
 
-export function Landing() {
+export function Landing({ onNavigate }: { onNavigate: (page: "home" | "build" | "chat") => void }) {
   const [value, setValue] = useState("");
   const [chatValue, setChatValue] = useState("");
   const [importOpen, setImportOpen] = useState(false);
@@ -102,6 +102,7 @@ export function Landing() {
     }
     setPref({ mode: "ideate" });
     setChatValue("");
+    onNavigate("chat");
     dispatch(prompt);
   }
 
@@ -112,6 +113,7 @@ export function Landing() {
       setSettingsOpen(true);
       return;
     }
+    onNavigate("build");
     dispatch(prompt);
   }
 
@@ -125,9 +127,9 @@ export function Landing() {
           <a href="https://github.com/3dbossprints/blitzbot" target="_blank" rel="noreferrer" className="quiet-link">
             Source
           </a>
-          <button className="quiet-link as-button" onClick={() => setSettingsOpen(true)}>
-            Keys
-          </button>
+          <button className="quiet-link as-button" onClick={() => onNavigate("build")}>Build</button>
+          <button className="quiet-link as-button" onClick={() => onNavigate("chat")}>Chat</button>
+          <button className="quiet-link as-button" onClick={() => setSettingsOpen(true)}>Keys</button>
         </nav>
       </header>
 
@@ -180,27 +182,6 @@ export function Landing() {
         </div>
 
         {mode === "build" && (
-          <>
-          <section className="landing-chat-card" aria-label="Chat with AI">
-            <div className="landing-chat-copy">
-              <span className="landing-chat-eyebrow">HAVE A QUESTION?</span>
-              <h2>Chat with AI</h2>
-              <p>Brainstorm ideas, ask coding questions, debug errors, or plan your next feature — without starting a build.</p>
-            </div>
-            <div className="landing-chat-input-row">
-              <input
-                value={chatValue}
-                onChange={(e) => setChatValue(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && submitChat()}
-                placeholder="Ask anything about coding, ideas, or your project…"
-                aria-label="Chat with AI message"
-              />
-              <button className="btn-primary btn-sm" onClick={submitChat} disabled={!chatValue.trim()}>
-                Chat ↗
-              </button>
-            </div>
-          </section>
-
           <section className="template-gallery" aria-label="Starter templates">
             <div className="template-gallery-head">
               <h2>Start with a template</h2>
@@ -216,7 +197,7 @@ export function Landing() {
                       className="template-card as-button"
                       onClick={() => {
                         setLoadingTemplate(template.id);
-                        void adoptImportedRepo(template.files, `BlitzBot ${template.title}`).finally(() => setLoadingTemplate(null));
+                        void adoptImportedRepo(template.files, `BlitzBot ${template.title}`).then(() => onNavigate("build")).finally(() => setLoadingTemplate(null));
                       }}
                       aria-label={`Use ${template.title} template`}
                     >
@@ -235,7 +216,6 @@ export function Landing() {
               </div>
             ))}
           </section>
-          </>
         )}
 
         <div className="import-row">
