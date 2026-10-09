@@ -4,7 +4,6 @@ import { ChatPane } from "./ChatPane";
 
 export function ChatPage({ onNavigate }: { onNavigate: (page: "home" | "build" | "chat") => void }) {
   const setPref = useStore((s) => s.setPref);
-  const chat = useStore((s) => s.chat);
   useEffect(() => {
     setPref({ mode: "ideate" });
   }, [setPref]);
