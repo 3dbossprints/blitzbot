@@ -59,7 +59,7 @@ function Diffs({ changes }: { changes: FileChange[] }) {
   );
 }
 
-export function ChatPane() {
+export function ChatPane({ ideateOnly = false }: { ideateOnly?: boolean }) {
   const chat = useStore((s) => s.chat);
   const writingFile = useStore((s) => s.writingFile);
   const buildBusy = useStore((s) => s.buildBusy);
@@ -126,7 +126,7 @@ export function ChatPane() {
         {writingFile && <div className="writing-pill">writing {writingFile}…</div>}
       </div>
       <div className="chat-controls">
-        <div className="mode-seg" role="radiogroup" aria-label="Message mode">
+        {!ideateOnly && <div className="mode-seg" role="radiogroup" aria-label="Message mode">
           <button
             className={`mode-btn ${mode === "build" ? "on" : ""}`}
             onClick={() => setPref({ mode: "build" })}
@@ -139,8 +139,8 @@ export function ChatPane() {
           >
             Ideate
           </button>
-        </div>
-        {mode === "build" && (
+        </div>}
+        {!ideateOnly && mode === "build" && (
           <button
             className={`compare-toggle as-button ${compareOn && compareReady ? "on" : ""}`}
             disabled={!compareReady}
