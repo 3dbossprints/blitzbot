@@ -25,6 +25,12 @@ export interface Keys {
   openrouterModel: string;
   /** GitHub personal access token (classic or fine-grained with repo scope) */
   github: string;
+  /** Public Supabase project URL and publishable/legacy anon key for generated frontend apps. */
+  supabaseUrl: string;
+  supabaseKey: string;
+  /** Appwrite endpoint and project ID; Appwrite API keys must never be stored here. */
+  appwriteEndpoint: string;
+  appwriteProjectId: string;
 }
 
 export interface ChatMsg {
