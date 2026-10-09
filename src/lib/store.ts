@@ -151,6 +151,10 @@ function loadKeys(): Keys {
     ollamaModel: "",
     openrouterModel: "openai/gpt-4o",
     github: "",
+    supabaseUrl: "",
+    supabaseKey: "",
+    appwriteEndpoint: "https://cloud.appwrite.io/v1",
+    appwriteProjectId: "",
   };
   try {
     const raw = localStorage.getItem(KEYS_STORAGE);
