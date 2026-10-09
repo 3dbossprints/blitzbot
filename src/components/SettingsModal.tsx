@@ -56,12 +56,7 @@ export function SettingsModal() {
   }
 
   function applyBackendEnv() {
-    const lines = [
-      keys.supabaseUrl.trim() ? `VITE_SUPABASE_URL=${keys.supabaseUrl.trim()}` : "",
-      keys.supabaseKey.trim() ? `VITE_SUPABASE_ANON_KEY=${keys.supabaseKey.trim()}` : "",
-      keys.appwriteEndpoint.trim() && keys.appwriteProjectId.trim() ? `VITE_APPWRITE_ENDPOINT=${keys.appwriteEndpoint.trim()}\nVITE_APPWRITE_PROJECT_ID=${keys.appwriteProjectId.trim()}` : "",
-    ].filter(Boolean);
-    if (!lines.length) {
+    if (!keys.supabaseUrl.trim() && !keys.supabaseKey.trim() && !(keys.appwriteEndpoint.trim() && keys.appwriteProjectId.trim())) {
       setBackendStatus("Enter at least one backend configuration before applying it.");
       return;
     }
