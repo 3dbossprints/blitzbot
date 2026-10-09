@@ -8,7 +8,6 @@ import { PushModal } from "./components/PushModal";
 import { ProjectsDrawer } from "./components/ProjectsDrawer";
 
 export default function App() {
-  const phase = useStore((s) => s.phase);
   const [page, setPage] = useState<"home" | "build" | "chat">("home");
   const onLanding = page === "home";
 
