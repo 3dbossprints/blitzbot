@@ -10,6 +10,10 @@ import { ProjectsDrawer } from "./components/ProjectsDrawer";
 export default function App() {
   const [page, setPage] = useState<"home" | "build" | "chat">("home");
   const onLanding = page === "home";
+  const navigate = (next: "home" | "build" | "chat") => {
+    if (next === "build") useStore.getState().setPref({ mode: "build" });
+    setPage(next);
+  };
 
   useEffect(() => {
     void useStore.getState().initApp();
@@ -17,7 +21,7 @@ export default function App() {
 
   return (
     <div className={`app ${onLanding ? "app-light" : "app-dark"}`}>
-      {page === "home" ? <Landing onNavigate={setPage} /> : page === "chat" ? <ChatPage onNavigate={setPage} /> : <Workspace onNavigate={setPage} />}
+      {page === "home" ? <Landing onNavigate={navigate} /> : page === "chat" ? <ChatPage onNavigate={navigate} /> : <Workspace onNavigate={navigate} />}
       <SettingsModal />
       <PushModal />
       <ProjectsDrawer />
