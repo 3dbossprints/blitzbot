@@ -37,7 +37,7 @@ function clampLayout(next: Layout, containerW: number): Layout {
   return out;
 }
 
-export function Workspace() {
+export function Workspace({ onNavigate }: { onNavigate: (page: "home" | "build" | "chat") => void }) {
   const setSettingsOpen = useStore((s) => s.setSettingsOpen);
   const setPushOpen = useStore((s) => s.setPushOpen);
   const setProjectsOpen = useStore((s) => s.setProjectsOpen);
@@ -85,6 +85,8 @@ export function Workspace() {
           {prompt || "untitled"}
         </span>
         <div className="studio-actions">
+          <button className="btn-ghost btn-sm" onClick={() => onNavigate("home")}>Home</button>
+          <button className="btn-ghost btn-sm" onClick={() => onNavigate("chat")}>Chat</button>
           <button className="btn-ghost btn-sm" onClick={() => void startNewProject()}>
             New
           </button>
