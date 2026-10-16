@@ -23,7 +23,7 @@ export function ProjectsDrawer() {
         </div>
         <p className="trust-note">Previous chats and builds are saved on this device. Deleting is permanent.</p>
         <button className="btn-primary btn-sm drawer-new" onClick={() => void startNewProject()}>
-          New project
+          New chat / project
         </button>
         {projects.length === 0 ? (
           <p className="drawer-empty">Nothing saved yet. Start a chat or build and it will appear here.</p>
