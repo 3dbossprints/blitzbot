@@ -168,8 +168,15 @@ export function ChatPane({ ideateOnly = false }: { ideateOnly?: boolean }) {
   function send() {
     const p = value.trim();
     if (!p) return;
+    const selected = resources.filter((resource) => attachedConnections.includes(resource.id));
+    const connectionContext = selected.length
+      ? "CONNECTED SERVICE CONTEXT (do not reveal credentials; use real integrations and preserve security):\n" + selected.map((resource) => "- " + resource.label + ": " + resource.prompt).join("\n")
+      : "";
+    const mcpContext = toolResults.length ? "MCP TOOL RESULTS FROM USER-REQUESTED ACTIONS:\n" + toolResults.join("\n\n") : "";
+    const enriched = [connectionContext, mcpContext, "USER REQUEST:\n" + p].filter(Boolean).join("\n\n");
     setValue("");
-    dispatch(p);
+    setToolResults([]);
+    dispatch(enriched);
   }
 
   return (
