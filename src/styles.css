@@ -1594,32 +1594,9 @@ button.chip:hover {
 .modal-backdrop:has(.modal[aria-label="Settings"]) .compare-picker {
   max-width: 820px;
 }
-.global-utilities {
-  position: fixed;
-  z-index: 30;
-  top: 10px;
-  right: 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.global-utilities .btn-ghost {
-  backdrop-filter: blur(12px);
-  background: color-mix(in srgb, var(--studio) 72%, transparent);
-  color: var(--gesso);
-  border-color: var(--line-dark);
-}
-.app-light .global-utilities .btn-ghost {
-  background: rgba(250,247,240,.92);
-  color: var(--graphite);
-  border-color: var(--linen);
-}
 @media (max-width: 680px) {
-  .global-utilities { top: 8px; right: 8px; gap: 4px; }
-  .global-utilities .btn-ghost { padding: 5px 8px; font-size: 11px; }
   .modal-backdrop:has(.modal[aria-label="Settings"]) .modal { padding: 18px 16px; }
 }
-
 
 /* Settings workspace and message controls */
 .modal-settings-fullscreen {
@@ -1746,4 +1723,105 @@ button.chip:hover {
 .settings-section-nav a:hover {
   border-color: var(--ink);
   color: var(--ink);
+}
+
+
+/* Theme-aware workspace surfaces. Header actions now live in their headers,
+   so they never float above and obscure the editor or chat. */
+.app-light {
+  --studio: #f1eee6;
+  --studio-2: #ffffff;
+  --line-dark: rgba(36, 34, 29, 0.14);
+  --linen: #e2dccf;
+  --ash: #777267;
+}
+.app-dark {
+  --studio: #141311;
+  --studio-2: #1c1a17;
+  --line-dark: rgba(233, 228, 216, 0.13);
+}
+.theme-toggle {
+  white-space: nowrap;
+}
+.app-light .chat-input-row input {
+  background: #fff;
+  color: var(--graphite);
+  border-color: var(--linen);
+}
+.app-light .chat-input-row input::placeholder {
+  color: #878174;
+}
+.app-light .tree-file {
+  color: var(--graphite);
+}
+.app-light .tree-file:hover,
+.app-light .logbar-head:hover {
+  background: rgba(36, 48, 232, 0.06);
+}
+.app-light .logbar-head,
+.app-light .preview-error {
+  color: var(--graphite);
+}
+.app-light .receipt {
+  background: #fff;
+  border-color: var(--linen);
+}
+.app-light .editor-empty {
+  background: #fff;
+}
+.app-light .studio-bar {
+  border-bottom-color: var(--linen);
+}
+.app-light .pane-head,
+.app-light .chat-input-row,
+.app-light .logbar {
+  border-color: var(--linen);
+}
+.modal-backdrop:has(.modal[aria-label="Settings"]) .modal-head {
+  top: 0;
+}
+.settings-section-nav {
+  top: 70px;
+}
+@media (max-width: 860px) {
+  .landing-nav {
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .studio-bar {
+    flex-wrap: wrap;
+  }
+  .studio-actions {
+    max-width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+}
+@media (max-width: 680px) {
+  .studio-bar {
+    gap: 10px;
+    padding: 10px 12px;
+  }
+  .studio-project {
+    min-width: 100%;
+    order: 3;
+  }
+  .studio-actions {
+    gap: 5px;
+  }
+  .studio-actions .btn-sm {
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+  .landing-bar {
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .landing-nav {
+    gap: 8px 12px;
+  }
+  .settings-section-nav {
+    top: 58px;
+  }
 }
