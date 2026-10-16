@@ -189,9 +189,11 @@ export function hasAnyKey(keys: Keys): boolean {
 let browserPipeline: any = null;
 let browserPipelineId = "";
 let browserPipelinePromise: Promise<any> | null = null;
+let browserModelGeneration = 0;
 
 /** Release browser model resources when the user turns the feature off. */
 export async function unloadBrowserLocalModel() {
+  browserModelGeneration++;
   const current = browserPipeline;
   browserPipeline = null;
   browserPipelineId = "";
@@ -204,36 +206,56 @@ async function streamBrowserLocal(o: StreamOpts): Promise<Usage> {
   if (o.signal?.aborted) throw new DOMException("Aborted", "AbortError");
   if (!browserPipeline || browserPipelineId !== modelId) {
     await unloadBrowserLocalModel();
-    if (!browserPipelinePromise) {
-      browserPipelinePromise = (async () => {
-        const { pipeline, env } = await import("@huggingface/transformers");
-        env.allowLocalModels = false;
-        return pipeline("text-generation", modelId, { dtype: "q4" });
-      })();
-    }
+    const generation = browserModelGeneration;
+    const { pipeline, env, TextStreamer } = await import("@huggingface/transformers");
+    env.allowLocalModels = false;
+    const pending = pipeline("text-generation", modelId, { dtype: "q4" });
+    browserPipelinePromise = pending;
     try {
-      browserPipeline = await browserPipelinePromise;
+      const loaded = await pending;
+      if (generation !== browserModelGeneration) {
+        try { await loaded.dispose?.(); } catch { /* stale load */ }
+        throw new Error("Browser-local AI was switched off or changed while loading.");
+      }
+      browserPipeline = loaded;
       browserPipelineId = modelId;
     } catch (e) {
-      browserPipelinePromise = null;
+      if (generation === browserModelGeneration) browserPipelinePromise = null;
       throw new Error("Could not load the browser model. Check browser compatibility, available memory, and model download access. " + (e instanceof Error ? e.message : String(e)));
     }
   }
+  if (!browserPipeline || browserPipelineId !== modelId) throw new Error("Browser-local AI is not active. Enable it in Settings and try again.");
   const messages = [{ role: "system", content: o.system }, ...o.messages];
-  const prompt = messages.map((m) => `${m.role === "system" ? "System" : m.role === "user" ? "User" : "Assistant"}: ${m.content}`).join("\n\n") + "\n\nAssistant:";
   let full = "";
-  const result = await browserPipeline(prompt, {
-    max_new_tokens: 768, do_sample: false, return_full_text: false,
-    callback_function: (packet: any) => {
+  const streamer = new (await import("@huggingface/transformers")).TextStreamer(browserPipeline.tokenizer, {
+    skip_prompt: true,
+    skip_special_tokens: true,
+    callback_function: (chunk: string) => {
       if (o.signal?.aborted) return;
-      const generated = packet?.[0]?.generated_text;
-      if (typeof generated === "string" && generated.length > full.length) {
-        const delta = generated.slice(full.length); full = generated; if (delta) o.onText(delta);
-      }
+      if (!chunk) return;
+      full += chunk;
+      o.onText(chunk);
     },
   });
+  const maxTokens = modelId.includes("3B") ? 3072 : 2048;
+  const result = await browserPipeline(messages, {
+    max_new_tokens: maxTokens,
+    do_sample: false,
+    streamer,
+  });
   if (o.signal?.aborted) throw new DOMException("Aborted", "AbortError");
-  const generated = result?.[0]?.generated_text;
-  if (typeof generated === "string" && !full) { full = generated; o.onText(generated); }
-  return { inputTokens: estimateTokens(o.system + o.messages.map((m) => m.content).join("\n")), outputTokens: estimateTokens(full), estimated: true };
+  if (!full) {
+    const generated = result?.[0]?.generated_text;
+    if (typeof generated === "string") full = generated;
+    else if (Array.isArray(generated)) {
+      const last = generated[generated.length - 1];
+      if (typeof last?.content === "string") full = last.content;
+    }
+    if (full) o.onText(full);
+  }
+  return {
+    inputTokens: estimateTokens(o.system + o.messages.map((m) => m.content).join("\n")),
+    outputTokens: estimateTokens(full),
+    estimated: true,
+  };
 }
