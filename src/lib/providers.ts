@@ -189,6 +189,7 @@ export function hasAnyKey(keys: Keys): boolean {
 let browserPipeline: any = null;
 let browserPipelineId = "";
 let browserPipelinePromise: Promise<any> | null = null;
+let browserPipelinePendingId = "";
 let browserModelGeneration = 0;
 
 /** Release browser model resources when the user turns the feature off. */
@@ -198,41 +199,59 @@ export async function unloadBrowserLocalModel() {
   browserPipeline = null;
   browserPipelineId = "";
   browserPipelinePromise = null;
+  browserPipelinePendingId = "";
   try { await current?.dispose?.(); } catch { /* already released */ }
 }
 
 async function streamBrowserLocal(o: StreamOpts): Promise<Usage> {
   const modelId = o.model || "onnx-community/Qwen2.5-Coder-1.5B-Instruct";
   if (o.signal?.aborted) throw new DOMException("Aborted", "AbortError");
+
   if (!browserPipeline || browserPipelineId !== modelId) {
-    await unloadBrowserLocalModel();
-    const generation = browserModelGeneration;
-    const { pipeline, env, TextStreamer } = await import("@huggingface/transformers");
-    env.allowLocalModels = false;
-    const pending = pipeline("text-generation", modelId, { dtype: "q4" });
-    browserPipelinePromise = pending;
+    let pending: Promise<any>;
+    let generation: number;
+    if (browserPipelinePromise && browserPipelinePendingId === modelId) {
+      pending = browserPipelinePromise;
+      generation = browserModelGeneration;
+    } else {
+      await unloadBrowserLocalModel();
+      generation = browserModelGeneration;
+      const { pipeline, env } = await import("@huggingface/transformers");
+      env.allowLocalModels = false;
+      pending = pipeline("text-generation", modelId, { dtype: "q4" });
+      browserPipelinePromise = pending;
+      browserPipelinePendingId = modelId;
+    }
+
     try {
       const loaded = await pending;
-      if (generation !== browserModelGeneration) {
-        try { await loaded.dispose?.(); } catch { /* stale load */ }
+      if (generation !== browserModelGeneration || browserPipelinePendingId !== modelId && browserPipelineId !== modelId) {
         throw new Error("Browser-local AI was switched off or changed while loading.");
       }
       browserPipeline = loaded;
       browserPipelineId = modelId;
+      browserPipelinePendingId = "";
     } catch (e) {
-      if (generation === browserModelGeneration) browserPipelinePromise = null;
+      if (generation === browserModelGeneration) {
+        browserPipelinePromise = null;
+        browserPipelinePendingId = "";
+      }
       throw new Error("Could not load the browser model. Check browser compatibility, available memory, and model download access. " + (e instanceof Error ? e.message : String(e)));
     }
   }
-  if (!browserPipeline || browserPipelineId !== modelId) throw new Error("Browser-local AI is not active. Enable it in Settings and try again.");
+
+  if (!browserPipeline || browserPipelineId !== modelId) {
+    throw new Error("Browser-local AI is not active. Enable it in Settings and try again.");
+  }
+
+  const { TextStreamer } = await import("@huggingface/transformers");
   const messages = [{ role: "system", content: o.system }, ...o.messages];
   let full = "";
-  const streamer = new (await import("@huggingface/transformers")).TextStreamer(browserPipeline.tokenizer, {
+  const streamer = new TextStreamer(browserPipeline.tokenizer, {
     skip_prompt: true,
     skip_special_tokens: true,
     callback_function: (chunk: string) => {
-      if (o.signal?.aborted) return;
-      if (!chunk) return;
+      if (o.signal?.aborted || !chunk) return;
       full += chunk;
       o.onText(chunk);
     },
