@@ -1496,3 +1496,65 @@ button.chip:hover {
   .landing-chat-card { grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 18px; }
   .landing-chat-input-row { align-items: stretch; }
 }
+
+
+/* Chat layout hardening: keep the conversation inside the dark workspace. */
+.studio,
+.dedicated-chat-page {
+  min-height: 0;
+  overflow: hidden;
+}
+.dedicated-chat-main {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.dedicated-chat-intro {
+  flex: 0 0 auto;
+}
+.dedicated-chat-main > .chat-pane {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+  overflow: hidden;
+}
+.chat-pane {
+  min-height: 0;
+  overflow: hidden;
+}
+.chat-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+.msg,
+.msg-body {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.msg-body {
+  white-space: pre-wrap;
+}
+.chat-input-row,
+.chat-controls,
+.pane-head {
+  flex: 0 0 auto;
+}
+@media (max-width: 680px) {
+  .dedicated-chat-main {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .studio-bar {
+    flex-wrap: wrap;
+    gap: 8px 12px;
+  }
+  .studio-actions {
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+}

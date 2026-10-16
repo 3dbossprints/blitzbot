@@ -16,17 +16,17 @@ export function ProjectsDrawer() {
     <div className="drawer-backdrop" onClick={() => setOpen(false)}>
       <aside className="drawer" role="dialog" aria-label="Projects" onClick={(e) => e.stopPropagation()}>
         <div className="drawer-head">
-          <h2>Projects</h2>
+          <h2>History &amp; projects</h2>
           <button className="quiet-link as-button" onClick={() => setOpen(false)}>
             close
           </button>
         </div>
-        <p className="trust-note">Saved on this device only. Deleting is permanent.</p>
+        <p className="trust-note">Previous chats and builds are saved on this device. Deleting is permanent.</p>
         <button className="btn-primary btn-sm drawer-new" onClick={() => void startNewProject()}>
-          New project
+          New chat / project
         </button>
         {projects.length === 0 ? (
-          <p className="drawer-empty">Nothing yet — your builds save here automatically.</p>
+          <p className="drawer-empty">Nothing saved yet. Start a chat or build and it will appear here.</p>
         ) : (
           <ul className="drawer-list">
             {projects.map((p) => (

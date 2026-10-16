@@ -4,6 +4,8 @@ import { ChatPane } from "./ChatPane";
 
 export function ChatPage({ onNavigate }: { onNavigate: (page: "home" | "build" | "chat") => void }) {
   const setPref = useStore((s) => s.setPref);
+  const startNewProject = useStore((s) => s.startNewProject);
+  const setProjectsOpen = useStore((s) => s.setProjectsOpen);
   useEffect(() => {
     setPref({ mode: "ideate" });
   }, [setPref]);
@@ -14,6 +16,8 @@ export function ChatPage({ onNavigate }: { onNavigate: (page: "home" | "build" |
         <span className="wordmark"><em>Blitz</em>Bot</span>
         <span className="studio-project">Chat with AI</span>
         <div className="studio-actions">
+          <button className="btn-ghost btn-sm" onClick={() => setProjectsOpen(true)}>History</button>
+          <button className="btn-ghost btn-sm" onClick={() => void startNewProject()}>New chat</button>
           <button className="btn-ghost btn-sm" onClick={() => onNavigate("home")}>Home</button>
           <button className="btn-ghost btn-sm" onClick={() => onNavigate("build")}>Build</button>
         </div>
