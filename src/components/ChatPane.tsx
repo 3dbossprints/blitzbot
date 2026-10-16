@@ -98,6 +98,73 @@ export function ChatPane({ ideateOnly = false }: { ideateOnly?: boolean }) {
 
   const compareReady = compareModels.length >= 2;
 
+  const resources: { id: string; label: string; detail: string; prompt: string }[] = [];
+  if (keys.supabaseUrl && keys.supabaseKey) resources.push({
+    id: "supabase", label: "Supabase", detail: "Browser-safe project credentials configured",
+    prompt: "Use the configured Supabase integration via VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY. Apply Row Level Security, do not hardcode credentials, and keep service-role keys on the server."
+  });
+  if (keys.appwriteEndpoint && keys.appwriteProjectId) resources.push({
+    id: "appwrite", label: "Appwrite", detail: "Endpoint and project ID configured",
+    prompt: "Use the configured Appwrite endpoint and project ID with the official Web SDK. Respect collection permissions; never embed server API keys."
+  });
+  if (integrationSettings.pocketbaseUrl) resources.push({
+    id: "pocketbase", label: "PocketBase", detail: integrationSettings.pocketbaseUrl,
+    prompt: "Use the configured PocketBase URL with real SDK or REST calls. Include authentication, loading, empty and error states; do not fake writes."
+  });
+  if (integrationSettings.rqliteUrl) resources.push({
+    id: "rqlite", label: "rqlite", detail: integrationSettings.rqliteUrl,
+    prompt: "Use the configured rqlite API endpoint through a deliberately CORS-enabled connection or server API. Never expose database admin credentials in frontend code."
+  });
+  if (integrationSettings.mongoProxyUrl) resources.push({
+    id: "mongodb", label: "MongoDB API", detail: integrationSettings.mongoProxyUrl,
+    prompt: "Use the configured authenticated MongoDB proxy URL. MongoDB URI and credentials must remain in server environment variables, never client code."
+  });
+  if (keys.github) resources.push({
+    id: "github", label: "GitHub", detail: "GitHub token configured",
+    prompt: "GitHub integration is configured. Never include its token in source, prompts, or logs. Use the Ship to GitHub action for publishing and confirm before changing remote branches."
+  });
+  if (integrationSettings.gitlabToken) resources.push({
+    id: "gitlab", label: "GitLab", detail: "GitLab token configured",
+    prompt: "GitLab credentials are configured. Never reveal or embed the token. Use the GitLab API for repository operations and confirm before publishing."
+  });
+
+  const mcpTools = (() => {
+    try { return JSON.parse(integrationSettings.mcpTools ?? "[]") as McpTool[]; } catch { return []; }
+  })();
+
+  async function runMcpTool(tool: McpTool) {
+    const endpoint = (integrationSettings.mcpUrl ?? "").trim();
+    if (!endpoint) { setToolStatus("Connect an MCP server in Settings first."); return; }
+    const raw = window.prompt("Arguments for " + tool.name + " (JSON object)", "{}");
+    if (raw === null) return;
+    let args: Record<string, unknown>;
+    try {
+      const parsed: unknown = JSON.parse(raw);
+      if (!parsed || Array.isArray(parsed) || typeof parsed !== "object") throw new Error("Arguments must be a JSON object.");
+      args = parsed as Record<string, unknown>;
+    } catch (error) {
+      setToolStatus("Invalid tool arguments: " + (error instanceof Error ? error.message : String(error)));
+      return;
+    }
+    setToolBusy(tool.name);
+    setToolStatus("Running MCP tool " + tool.name + "…");
+    try {
+      const result = await callMcpTool(
+        endpoint,
+        integrationSettings.mcpToken ?? "",
+        integrationSettings.mcpSessionId ?? "",
+        tool.name,
+        args,
+      );
+      const rendered = JSON.stringify(result, null, 2) ?? String(result);
+      setToolResults((items) => [...items, "Tool: " + tool.name + "\nArguments: " + JSON.stringify(args) + "\nResult:\n" + rendered]);
+      setToolStatus("Tool result added to the context for your next message.");
+      setPlusOpen(false);
+    } catch (error) {
+      setToolStatus("MCP tool failed: " + (error instanceof Error ? error.message : String(error)));
+    } finally { setToolBusy(null); }
+  }
+
   function send() {
     const p = value.trim();
     if (!p) return;
