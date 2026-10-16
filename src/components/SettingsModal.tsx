@@ -108,7 +108,7 @@ export function SettingsModal() {
       const name = deployName.trim() || projectPrompt || "blitzbot-project";
       const result = kind === "vercel"
         ? await deployToVercel(assets, token, name, (line) => setSettingsNotice(line))
-        : await deployToNetlify(assets, token, name, integrationSettings.netlifySiteId ?? "");
+        : await deployToNetlify(assets, token, name, integrationSettings.netlifySiteId ?? "", (line) => setSettingsNotice(line));
       if (kind === "netlify" && result.id && result.id !== integrationSettings.netlifySiteId) {
         saveIntegrationSettings({ ...integrationSettings, netlifySiteId: result.id });
       }
