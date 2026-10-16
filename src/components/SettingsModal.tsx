@@ -100,6 +100,46 @@ export function SettingsModal() {
       setSettingsNotice((kind === "vercel" ? "Vercel" : "Netlify") + " deployment failed: " + (error instanceof Error ? error.message : String(error)));
     } finally { setBackendBusy(false); }
   }
+  async function publishToGitLab() {
+    const token = (integrationSettings.gitlabToken ?? "").trim();
+    if (!token) { setSettingsNotice("Enter a GitLab token with API access first."); return; }
+    if (!Object.keys(files).length) { setSettingsNotice("Create or open a project first."); return; }
+    const name = (deployName.trim() || projectPrompt || "blitzbot-project").toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 48) || "blitzbot-project";
+    setBackendBusy(true);
+    setSettingsNotice("Creating a private GitLab repository…");
+    try {
+      const createdResponse = await fetch("https://gitlab.com/api/v4/projects", {
+        method: "POST",
+        headers: { "PRIVATE-TOKEN": token, "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ name, visibility: "private", initialize_with_readme: true }),
+      });
+      const project = await createdResponse.json().catch(() => ({})) as { id?: number; name?: string; web_url?: string; default_branch?: string; message?: string };
+      if (!createdResponse.ok || !project.id) throw new Error(project.message || "Could not create a repository (HTTP " + createdResponse.status + ").");
+      const actions = Object.entries(files)
+        .filter(([filePath]) => !filePath.startsWith("/") && !filePath.split("/").includes(".."))
+        .map(([filePath, content]) => ({
+          action: filePath.toLowerCase() === "readme.md" ? "update" : "create",
+          file_path: filePath,
+          content,
+        }));
+      if (actions.length > 100) throw new Error("This project has more than 100 files. Split the initial upload before publishing to GitLab.");
+      const commitResponse = await fetch("https://gitlab.com/api/v4/projects/" + project.id + "/repository/commits", {
+        method: "POST",
+        headers: { "PRIVATE-TOKEN": token, "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          branch: project.default_branch || "main",
+          commit_message: "Publish project from BlitzBot",
+          actions,
+        }),
+      });
+      const commit = await commitResponse.json().catch(() => ({})) as { message?: string; id?: string };
+      if (!commitResponse.ok) throw new Error("Repository was created, but the initial file commit failed: " + (commit.message || "HTTP " + commitResponse.status) + ". Repo: " + (project.web_url || project.name));
+      setSettingsNotice("Published " + actions.length + " file(s) to GitLab: " + (project.web_url || project.name) + ".");
+    } catch (error) {
+      setSettingsNotice("GitLab publish failed: " + (error instanceof Error ? error.message : String(error)) + ". Check API token scope and browser CORS.");
+    } finally { setBackendBusy(false); }
+  }
+
   async function testGitLab() {
     const token = (integrationSettings.gitlabToken ?? "").trim();
     if (!token) { setSettingsNotice("Enter a GitLab personal access token first."); return; }
@@ -468,6 +508,8 @@ export function SettingsModal() {
           <p className="field-hint">GitHub repository import and publishing are available through the GitHub token and Ship to GitHub workflow. This section verifies GitLab credentials.</p>
           <label className="field"><span>GitLab personal access token</span><input type="password" value={integrationSettings.gitlabToken ?? ""} onChange={(e) => saveIntegrationSettings({ ...integrationSettings, gitlabToken: e.target.value })} placeholder="glpat-…" autoComplete="off" /></label>
           <div className="settings-inline-actions"><button className="quiet-link as-button" disabled={backendBusy} onClick={() => void testGitLab()}>Test GitLab connection</button></div>
+          <div className="settings-inline-actions"><button className="btn-primary btn-sm" disabled={backendBusy || !Object.keys(files).length} onClick={() => void publishToGitLab()}>{backendBusy ? "Working…" : "Publish current project to new private GitLab repo"}</button></div>
+          {settingsNotice && <p className="field-hint">{settingsNotice}</p>}
         </section>
         <section id="settings-mcp" className="settings-section">
           <h3>Custom MCP</h3>
