@@ -126,9 +126,9 @@ export function SettingsModal() {
 
   return (
     <div className="modal-backdrop" onClick={() => setOpen(false)}>
-      <div className="modal" role="dialog" aria-label="Settings" onClick={(e) => e.stopPropagation()}>
+      <div className="modal modal-settings-fullscreen" role="dialog" aria-label="Settings" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
-          <h2>Keys & models</h2>
+          <h2>Settings</h2>
           <button className="quiet-link as-button" onClick={() => setOpen(false)}>
             close
           </button>
