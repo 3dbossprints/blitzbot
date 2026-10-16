@@ -2072,3 +2072,55 @@ button.chip:hover {
     font-size: 11px;
   }
 }
+
+
+/* Settings adopts the active theme while retaining a high-contrast form UI. */
+.app-dark .modal-backdrop:has(.modal[aria-label="Settings"]) {
+  background: #090a0c;
+}
+.app-dark .modal-backdrop:has(.modal[aria-label="Settings"]) .modal,
+.app-dark .modal-backdrop:has(.modal[aria-label="Settings"]) .modal-head,
+.app-dark .modal-backdrop:has(.modal[aria-label="Settings"]) .settings-section-nav {
+  background: #17181c;
+  color: #f5f5f4;
+}
+.app-dark .modal-backdrop:has(.modal[aria-label="Settings"]) .modal-head {
+  border-color: #303137;
+}
+.app-dark .modal-backdrop:has(.modal[aria-label="Settings"]) .trust-note,
+.app-dark .modal-backdrop:has(.modal[aria-label="Settings"]) .field-hint {
+  color: #aaaab3;
+}
+.app-dark .modal-backdrop:has(.modal[aria-label="Settings"]) .settings-section,
+.app-dark .modal-backdrop:has(.modal[aria-label="Settings"]) .mcp-tool-list,
+.app-dark .modal-backdrop:has(.modal[aria-label="Settings"]) .mcp-tool-list li {
+  border-color: #303137;
+}
+.app-dark .modal-backdrop:has(.modal[aria-label="Settings"]) .field input,
+.app-dark .modal-backdrop:has(.modal[aria-label="Settings"]) .field select,
+.app-dark .modal-backdrop:has(.modal[aria-label="Settings"]) .field textarea,
+.app-dark .modal-backdrop:has(.modal[aria-label="Settings"]) .field input[type="file"] {
+  background: #222329;
+  color: #f5f5f4;
+  border-color: #3a3b44;
+}
+.app-dark .modal-backdrop:has(.modal[aria-label="Settings"]) .field input::placeholder,
+.app-dark .modal-backdrop:has(.modal[aria-label="Settings"]) .field textarea::placeholder {
+  color: #9999a2;
+}
+.app-dark .modal-backdrop:has(.modal[aria-label="Settings"]) .settings-section-nav a {
+  background: #222329;
+  color: #eeeef2;
+  border-color: #3a3b44;
+}
+.app-dark .modal-backdrop:has(.modal[aria-label="Settings"]) .settings-section-nav a:hover {
+  border-color: #777bff;
+  background: #292a38;
+}
+.app-dark .modal-backdrop:has(.modal[aria-label="Settings"]) .deployment-status {
+  background: rgba(110, 115, 255, .12);
+  border-color: #777bff;
+}
+.app-dark .modal-backdrop:has(.modal[aria-label="Settings"]) .skill-row {
+  border-color: #303137;
+}
