@@ -40,6 +40,8 @@ export async function fetchModels(provider: ProviderId, keys: Keys): Promise<Mod
       return fetchOpenRouter(keys.openrouter);
     case "ollama":
       return fetchOllama(keys.ollamaUrl);
+    case "web-local":
+      return [];
   }
 }
 
