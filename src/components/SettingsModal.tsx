@@ -91,7 +91,7 @@ export function SettingsModal() {
         </div>
 
         <p className="trust-note">
-          Keys are stored in this browser's localStorage and sent only to the provider you pick.
+          AI credentials are stored in this browser's localStorage and sent only to the provider you select.
           Projects and chats are saved on this device (IndexedDB), never uploaded. There is no
           BlitzBot server — check the network tab.
         </p>
