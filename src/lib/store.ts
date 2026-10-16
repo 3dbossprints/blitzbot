@@ -266,7 +266,7 @@ export const useStore = create<State>((set, get) => ({
 
   refreshModels: async (provider) => {
     const { keys } = get();
-    const hasKey = provider === "ollama" ? keys.ollamaUrl : keys[provider];
+    const hasKey = provider === "web-local" ? false : provider === "ollama" ? keys.ollamaUrl : keys[provider];
     if (!hasKey) {
       set((s) => ({ models: { ...s.models, [provider]: undefined } }));
       return;
