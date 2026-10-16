@@ -229,7 +229,7 @@ export function Landing({ onNavigate, theme, onToggleTheme }: { onNavigate: (pag
               {recent.map((p) => (
                 <li key={p.id}>
                   <button className="recent-row as-button" onClick={() => void openProject(p.id)}>
-                    <span className="recent-title">{p.title}</span>
+                    <span className="recent-title"><span className="recent-site-icon" aria-hidden="true">{p.fileCount > 0 ? "▧" : "◌"}</span>{p.title}</span>
                     <span className="recent-meta">
                       {p.fileCount} files · {timeAgo(p.updatedAt)}
                     </span>
