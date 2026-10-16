@@ -226,6 +226,7 @@ async function streamBrowserLocal(o: StreamOpts): Promise<Usage> {
     try {
       const loaded = await pending;
       if (generation !== browserModelGeneration || browserPipelinePendingId !== modelId && browserPipelineId !== modelId) {
+        try { await loaded.dispose?.(); } catch { /* stale model finished loading after it was disabled */ }
         throw new Error("Browser-local AI was switched off or changed while loading.");
       }
       browserPipeline = loaded;
