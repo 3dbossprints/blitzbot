@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useStore } from "../lib/store";
 import { hasAnyKey } from "../lib/providers";
 import { route } from "../lib/router";
@@ -85,8 +85,18 @@ export function Landing({ onNavigate, theme, onToggleTheme }: { onNavigate: (pag
   const openProject = useStore((s) => s.openProject);
   const adoptImportedRepo = useStore((s) => s.adoptImportedRepo);
   const [loadingTemplate, setLoadingTemplate] = useState<string | null>(null);
+  const [browserLocalReady, setBrowserLocalReady] = useState(() => {
+    try { return localStorage.getItem("blitzbot.browser-ai.enabled") === "true"; } catch { return false; }
+  });
+  useEffect(() => {
+    const refresh = () => {
+      try { setBrowserLocalReady(localStorage.getItem("blitzbot.browser-ai.enabled") === "true"); } catch { setBrowserLocalReady(false); }
+    };
+    window.addEventListener("blitzbot-integrations-updated", refresh);
+    return () => window.removeEventListener("blitzbot-integrations-updated", refresh);
+  }, []);
 
-  const keysReady = hasAnyKey(keys);
+  const keysReady = hasAnyKey(keys) || browserLocalReady;
   const preview =
     value.trim() && keysReady && autoRoute && mode === "build" ? route(value, keys, models) : null;
   const recent = projects.slice(0, 5);
