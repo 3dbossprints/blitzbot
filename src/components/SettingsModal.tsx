@@ -33,6 +33,32 @@ export function SettingsModal() {
   const [localAiEnabled, setLocalAiEnabled] = useState(() => { try { return localStorage.getItem("blitzbot.browser-ai.enabled") === "true"; } catch { return false; } });
   const [localModel, setLocalModel] = useState(() => { try { return localStorage.getItem("blitzbot.browser-ai.model") || "onnx-community/Qwen2.5-Coder-1.5B-Instruct"; } catch { return "onnx-community/Qwen2.5-Coder-1.5B-Instruct"; } });
   const [backendBusy, setBackendBusy] = useState(false);
+  const [basePrompt, setBasePrompt] = useState(() => { try { return localStorage.getItem("blitzbot.base-prompt.v1") ?? ""; } catch { return ""; } });
+  const [skills, setSkills] = useState<{ id: string; name: string; content: string; enabled: boolean }[]>(() => {
+    try { return JSON.parse(localStorage.getItem("blitzbot.skills.v1") ?? "[]"); } catch { return []; }
+  });
+  const [integrationSettings, setIntegrationSettings] = useState<Record<string, string>>(() => {
+    try { return JSON.parse(localStorage.getItem("blitzbot.integrations.v1") ?? "{}"); } catch { return {}; }
+  });
+  const [settingsNotice, setSettingsNotice] = useState("");
+  function saveIntegrationSettings(next: Record<string, string>) {
+    setIntegrationSettings(next);
+    try { localStorage.setItem("blitzbot.integrations.v1", JSON.stringify(next)); } catch {}
+  }
+  async function importSkills(files: FileList | null) {
+    if (!files?.length) return;
+    const added: { id: string; name: string; content: string; enabled: boolean }[] = [];
+    for (const file of Array.from(files)) {
+      if (file.size > 100_000) { setSettingsNotice("Skipped " + file.name + ": skill files must be under 100 KB."); continue; }
+      try { added.push({ id: crypto.randomUUID(), name: file.name, content: await file.text(), enabled: true }); }
+      catch { setSettingsNotice("Could not read " + file.name + "."); }
+    }
+    setSkills((current) => {
+      const next = [...current, ...added];
+      try { localStorage.setItem("blitzbot.skills.v1", JSON.stringify(next)); } catch { setSettingsNotice("Browser storage is full; remove a large skill and try again."); }
+      return next;
+    });
+  }
 
   async function testBackend(kind: "supabase" | "appwrite") {
     setBackendBusy(true);
@@ -334,6 +360,38 @@ export function SettingsModal() {
           Toggle "⇄ compare" on the input to race these on your next build and pick the winner. Each
           candidate bills its own tokens.
         </p>
+        <section className="settings-section">
+          <h3>Deployment</h3>
+          <p className="field-hint">Save tokens for later deployment integration. This does not deploy a project by itself.</p>
+          <label className="field"><span>Vercel access token</span><input type="password" value={integrationSettings.vercelToken ?? ""} onChange={(e) => saveIntegrationSettings({ ...integrationSettings, vercelToken: e.target.value })} placeholder="Vercel token" autoComplete="off" /></label>
+          <label className="field"><span>Netlify access token</span><input type="password" value={integrationSettings.netlifyToken ?? ""} onChange={(e) => saveIntegrationSettings({ ...integrationSettings, netlifyToken: e.target.value })} placeholder="Netlify token" autoComplete="off" /></label>
+        </section>
+        <section className="settings-section">
+          <h3>GitLab</h3>
+          <label className="field"><span>GitLab personal access token</span><input type="password" value={integrationSettings.gitlabToken ?? ""} onChange={(e) => saveIntegrationSettings({ ...integrationSettings, gitlabToken: e.target.value })} placeholder="glpat-…" autoComplete="off" /></label>
+          <p className="field-hint">GitLab API actions need a server-side integration before this token can be used to push or import repositories.</p>
+        </section>
+        <section className="settings-section">
+          <h3>Custom MCP</h3>
+          <label className="field"><span>MCP bridge endpoint</span><input value={integrationSettings.mcpUrl ?? ""} onChange={(e) => saveIntegrationSettings({ ...integrationSettings, mcpUrl: e.target.value })} placeholder="https://your-mcp-bridge.example.com" /></label>
+          <p className="field-hint">This saves an endpoint for setup. An active MCP session requires a trusted server-side bridge; entering a URL alone does not connect it.</p>
+        </section>
+        <section className="settings-section">
+          <h3>Base prompt</h3>
+          <p className="field-hint">Persistent instructions appended to the built-in prompt for future coding and ideation requests.</p>
+          <label className="field"><span>Your instructions</span><textarea rows={6} value={basePrompt} onChange={(e) => { setBasePrompt(e.target.value); try { localStorage.setItem("blitzbot.base-prompt.v1", e.target.value); } catch {} }} placeholder="Prefer accessible React components, TypeScript, and minimal dependencies…" /></label>
+        </section>
+        <section className="settings-section">
+          <h3>Skills</h3>
+          <p className="field-hint">Upload .md, .txt, or .json instructions (under 100 KB each). Enabled skills are included in future model context and stored in this browser.</p>
+          <label className="field"><span>Upload skill files</span><input type="file" accept=".md,.txt,.json,text/plain,text/markdown,application/json" multiple onChange={(e) => { void importSkills(e.target.files); e.currentTarget.value = ""; }} /></label>
+          {skills.map((skill) => <div className="skill-row" key={skill.id}>
+            <label className="check"><input type="checkbox" checked={skill.enabled} onChange={(e) => setSkills((current) => { const next = current.map((s) => s.id === skill.id ? { ...s, enabled: e.target.checked } : s); try { localStorage.setItem("blitzbot.skills.v1", JSON.stringify(next)); } catch {} return next; })} /><span>{skill.name}</span></label>
+            <button className="quiet-link as-button" onClick={() => setSkills((current) => { const next = current.filter((s) => s.id !== skill.id); try { localStorage.setItem("blitzbot.skills.v1", JSON.stringify(next)); } catch {} return next; })}>Remove</button>
+          </div>)}
+          {settingsNotice && <p className="field-hint">{settingsNotice}</p>}
+        </section>
+
 
         <div className="field-row">
           <label className="check">
