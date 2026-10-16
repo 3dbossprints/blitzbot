@@ -526,6 +526,9 @@ export function SettingsModal() {
         <p className="field-hint">MongoDB connection strings and database passwords belong in your server's environment variables. Connect through your own authenticated API; never put database admin credentials in browser storage.</p>
         <label className="field"><span>rqlite API URL</span><input value={integrationSettings.rqliteUrl ?? ""} onChange={(e) => saveIntegrationSettings({ ...integrationSettings, rqliteUrl: e.target.value })} placeholder="http://localhost:4001" /></label>
         <label className="field"><span>PocketBase URL</span><input value={integrationSettings.pocketbaseUrl ?? ""} onChange={(e) => saveIntegrationSettings({ ...integrationSettings, pocketbaseUrl: e.target.value })} placeholder="https://your-instance.example.com" /></label>
+        <label className="field"><span>Custom database API / secure proxy URL</span><input value={integrationSettings.databaseApiUrl ?? ""} onChange={(e) => saveIntegrationSettings({ ...integrationSettings, databaseApiUrl: e.target.value })} placeholder="https://your-api.example.com" /></label>
+        <label className="field"><span>Optional user-scoped API bearer token</span><input type="password" value={integrationSettings.databaseApiToken ?? ""} onChange={(e) => saveIntegrationSettings({ ...integrationSettings, databaseApiToken: e.target.value })} placeholder="User/session access token only" autoComplete="off" /></label>
+        <p className="field-hint">Use your own authenticated API or serverless functions for privileged writes. Keep Supabase service-role keys, MongoDB URIs, Appwrite server API keys and other admin credentials in that server's environment-secret store, never in BlitzBot or generated client code. Provide a GET /health endpoint to test the connection.</p>
         </section>
 
 <section id="settings-deployment" className="settings-section">
