@@ -2147,3 +2147,85 @@ button.chip:hover {
   background: rgba(90,99,255,.18);
   color: #afb2ff;
 }
+
+
+/* Final contrast pass across the full app, drawers and GitHub publishing dialog. */
+.app-dark .hero-input {
+  color: var(--gesso);
+  caret-color: var(--ink-bright);
+}
+.app-dark .hero-input::placeholder {
+  color: #a6a39b;
+}
+.app-dark .hero-input-wrap {
+  border-color: rgba(250, 247, 240, .78);
+}
+.app-dark .chip {
+  background: #222126;
+  border-color: #45434b;
+  color: #f4f2ed;
+}
+.app-dark .chip.ghost {
+  background: transparent;
+  color: #a6a39b;
+}
+.app-dark .recent-row {
+  border-color: var(--line-dark);
+}
+.app-dark .recent-row:hover .recent-title {
+  color: #afb2ff;
+}
+.app-dark .drawer {
+  background: #17181c;
+  color: #f5f5f4;
+}
+.app-dark .drawer-head,
+.app-dark .drawer .trust-note,
+.app-dark .drawer .drawer-meta,
+.app-dark .drawer .drawer-empty {
+  color: #aaaab3;
+}
+.app-dark .drawer-row,
+.app-dark .drawer-list .drawer-row {
+  border-color: #303137;
+}
+.app-dark .drawer-row.current .drawer-title,
+.app-dark .drawer-open:hover .drawer-title {
+  color: #afb2ff;
+}
+.app-dark .drawer-delete {
+  color: #a3a3ad;
+}
+.app-dark .drawer-delete:hover {
+  color: #ff8575;
+  background: rgba(255, 105, 86, .1);
+}
+.app-dark .modal-backdrop:has(.modal[aria-label="Push to GitHub"]) .modal {
+  background: #17181c;
+  color: #f5f5f4;
+  border: 1px solid #303137;
+}
+.app-dark .modal-backdrop:has(.modal[aria-label="Push to GitHub"]) .trust-note,
+.app-dark .modal-backdrop:has(.modal[aria-label="Push to GitHub"]) .field-hint {
+  color: #aaaab3;
+}
+.app-dark .modal-backdrop:has(.modal[aria-label="Push to GitHub"]) .field input,
+.app-dark .modal-backdrop:has(.modal[aria-label="Push to GitHub"]) .field select,
+.app-dark .modal-backdrop:has(.modal[aria-label="Push to GitHub"]) .field textarea {
+  background: #222329;
+  color: #f5f5f4;
+  border-color: #3a3b44;
+}
+.app-dark .modal-backdrop:has(.modal[aria-label="Push to GitHub"]) .push-steps {
+  border-color: #303137;
+}
+.app-dark .modal-backdrop:has(.modal[aria-label="Push to GitHub"]) .push-step {
+  border-color: #303137;
+}
+.app-dark .modal-backdrop:has(.modal[aria-label="Push to GitHub"]) .push-done a {
+  color: #a8abff;
+}
+.app-dark .modal-backdrop:has(.modal[aria-label="Push to GitHub"]) .field-hint code,
+.app-dark .modal-backdrop:has(.modal[aria-label="Push to GitHub"]) .push-steps code {
+  background: #303137;
+}
