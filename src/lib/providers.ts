@@ -17,6 +17,7 @@ export interface StreamOpts {
  * Returns token usage (real when the provider reports it, estimated otherwise).
  */
 export async function streamChat(opts: StreamOpts): Promise<Usage> {
+  if (opts.provider === "web-local") return streamBrowserLocal(opts);
   if (opts.provider === "anthropic") return streamAnthropic(opts);
   return streamOpenAICompatible(opts);
 }
@@ -182,4 +183,61 @@ async function safeText(res: Response): Promise<string> {
 
 export function hasAnyKey(keys: Keys): boolean {
   return Boolean(keys.openai || keys.anthropic || keys.openrouter || keys.ollamaUrl);
+}
+
+
+/** Runs a quantized coding model entirely in this browser. Model weights download only on first use. */
+let browserPipeline: any = null;
+let browserPipelineId = "";
+let browserPipelinePromise: Promise<any> | null = null;
+
+export async function unloadBrowserLocalModel() {
+  const current = browserPipeline;
+  browserPipeline = null;
+  browserPipelineId = "";
+  browserPipelinePromise = null;
+  try { await current?.dispose?.(); } catch { /* model may already be released */ }
+}
+
+async function streamBrowserLocal(o: StreamOpts): Promise<Usage> {
+  const modelId = o.model || "onnx-community/Qwen2.5-Coder-1.5B-Instruct";
+  if (o.signal?.aborted) throw new DOMException("Aborted", "AbortError");
+  if (!browserPipeline || browserPipelineId !== modelId) {
+    await unloadBrowserLocalModel();
+    if (!browserPipelinePromise) {
+      browserPipelinePromise = (async () => {
+        const { pipeline, env } = await import("@huggingface/transformers");
+        env.allowLocalModels = false;
+        return pipeline("text-generation", modelId, { dtype: "q4" });
+      })();
+    }
+    try {
+      browserPipeline = await browserPipelinePromise;
+      browserPipelineId = modelId;
+    } catch (e) {
+      browserPipelinePromise = null;
+      throw new Error("Could not load the browser model. Check browser compatibility, available memory, and the model download connection. " + (e instanceof Error ? e.message : String(e)));
+    }
+  }
+  const messages = [{ role: "system", content: o.system }, ...o.messages];
+  const prompt = messages.map((m) => `${m.role === "system" ? "System" : m.role === "user" ? "User" : "Assistant"}: ${m.content}`).join("\n\n") + "\n\nAssistant:";
+  let full = "";
+  const result = await browserPipeline(prompt, {
+    max_new_tokens: 768,
+    do_sample: false,
+    return_full_text: false,
+    callback_function: (packet: any) => {
+      if (o.signal?.aborted) return;
+      const text = packet?.[0]?.generated_text;
+      if (typeof text === "string" && text.length > full.length) {
+        const delta = text.slice(full.length);
+        full = text;
+        if (delta) o.onText(delta);
+      }
+    },
+  });
+  if (o.signal?.aborted) throw new DOMException("Aborted", "AbortError");
+  const generated = result?.[0]?.generated_text;
+  if (typeof generated === "string" && !full) { full = generated; o.onText(generated); }
+  return { inputTokens: estimateTokens(o.system + o.messages.map((m) => m.content).join("\n")), outputTokens: estimateTokens(full), estimated: true };
 }
