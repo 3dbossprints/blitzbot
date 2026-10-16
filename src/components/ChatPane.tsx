@@ -316,7 +316,7 @@ export function ChatPane({ ideateOnly = false }: { ideateOnly?: boolean }) {
             title={
               compareReady
                 ? "Run this prompt through your compare candidates and pick a winner"
-                : "Pick 2–3 compare candidates in Keys & models"
+                : "Pick 2–3 compare candidates in Settings → AI"
             }
             onClick={() => setPref({ compareOn: !compareOn })}
           >
