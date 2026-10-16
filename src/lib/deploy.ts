@@ -3,7 +3,9 @@ import { makeZip } from "./zip";
 export interface DeploymentResult {
   provider: "vercel" | "netlify";
   url: string;
+  /** Host project/site ID for reuse on the next deployment. */
   id?: string;
+  deployId?: string;
   state?: string;
 }
 
@@ -37,6 +39,7 @@ export async function deployToNetlify(
   token: string,
   projectName: string,
   existingSiteId = "",
+  onProgress: (message: string) => void = () => {},
 ): Promise<DeploymentResult> {
   if (!token.trim()) throw new Error("Enter a Netlify personal access token in Settings → Deployment.");
   if (!assets["index.html"]) throw new Error("The production build is missing index.html.");
@@ -60,7 +63,8 @@ export async function deployToNetlify(
   }
   if (!site.id) throw new Error("Netlify returned no site ID. Check your Netlify dashboard.");
 
-  const deploy = await fetchJson("https://api.netlify.com/api/v1/sites/" + encodeURIComponent(site.id) + "/deploys", {
+  onProgress("Uploading the built site to Netlify…");
+  let deploy = await fetchJson("https://api.netlify.com/api/v1/sites/" + encodeURIComponent(site.id) + "/deploys", {
     method: "POST",
     headers: {
       Authorization: "Bearer " + token.trim(),
@@ -69,10 +73,26 @@ export async function deployToNetlify(
     },
     body: makeZip(assets),
   });
-  const url = deploy.ssl_url || deploy.deploy_ssl_url || site.ssl_url || site.url;
+  const deployId = String(deploy.id ?? "");
+  let state = String(deploy.state || deploy.processing_state || "uploading");
+  let url = String(deploy.ssl_url || deploy.deploy_ssl_url || site.ssl_url || site.url || "");
+
+  if (deployId) {
+    for (let attempt = 0; attempt < 24 && !["ready", "error", "canceled"].includes(state.toLowerCase()); attempt++) {
+      await new Promise((resolve) => setTimeout(resolve, 2500));
+      onProgress("Netlify deploy state: " + state + "…");
+      deploy = await fetchJson("https://api.netlify.com/api/v1/deploys/" + encodeURIComponent(deployId), {
+        headers: { Authorization: "Bearer " + token.trim(), Accept: "application/json" },
+      });
+      state = String(deploy.state || deploy.processing_state || state);
+      url = String(deploy.ssl_url || deploy.deploy_ssl_url || url);
+    }
+  }
+  if (state.toLowerCase() === "error" || state.toLowerCase() === "canceled") {
+    throw new Error("Netlify deployment entered state " + state + ". Open Netlify's deploy log for the detailed reason.");
+  }
   if (!url) throw new Error("Netlify accepted the deploy but did not return a site URL. Check your Netlify dashboard.");
-  // id deliberately points to the site, so later clicks update the same site.
-  return { provider: "netlify", url, id: String(site.id), state: deploy.state || deploy.processing_state };
+  return { provider: "netlify", url, id: String(site.id), deployId: deployId || undefined, state };
 }
 export async function deployToVercel(
   assets: Record<string, string>,
