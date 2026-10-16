@@ -142,6 +142,7 @@ const KEYS_STORAGE = "codecanvas.keys.v1";
 const PREFS_STORAGE = "codecanvas.prefs.v1";
 
 const uid = () => crypto.randomUUID();
+const deletedProjectIds = new Set<string>();
 
 function loadKeys(): Keys {
   const base: Keys = {
@@ -385,8 +386,8 @@ export const useStore = create<State>((set, get) => ({
 
   removeProject: async (id) => {
     const deletingCurrent = get().projectId === id;
-    // Cancel the debounced autosave before deleting the record, otherwise it
-    // could recreate a just-deleted chat under a new ID.
+    // Prevent a save already in flight from recreating the record after delete.
+    deletedProjectIds.add(id);
     if (deletingCurrent) flushPersist();
     await deleteProjectRecord(id);
     if (deletingCurrent) {
@@ -652,6 +653,7 @@ async function persistNow(set: Set, get: Get) {
   }
   const firstUser = s.chat.find((c) => c.role === "user")?.content ?? "";
   const title = (s.prompt || firstUser || "untitled").slice(0, 64);
+  if (deletedProjectIds.has(id)) return;
   try {
     await upsertProject({
       id,
@@ -663,6 +665,10 @@ async function persistNow(set: Set, get: Get) {
       lastChoice: s.lastChoice,
       updatedAt: Date.now(),
     });
+    if (deletedProjectIds.has(id)) {
+      await deleteProjectRecord(id);
+      return;
+    }
     void get().loadProjects();
   } catch (e) {
     get().log({ kind: "err", text: `local save failed: ${e instanceof Error ? e.message : e}` });
