@@ -2124,3 +2124,26 @@ button.chip:hover {
 .app-dark .modal-backdrop:has(.modal[aria-label="Settings"]) .skill-row {
   border-color: #303137;
 }
+
+.recent-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.recent-site-icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  background: rgba(36,48,232,.1);
+  color: var(--ink);
+  font-size: 15px;
+}
+.app-dark .recent-site-icon {
+  background: rgba(90,99,255,.18);
+  color: #afb2ff;
+}
