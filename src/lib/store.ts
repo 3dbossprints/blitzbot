@@ -651,6 +651,11 @@ async function persistNow(set: Set, get: Get) {
 function pickModel(prompt: string, get: Get): ModelChoice | null {
   const { autoRoute, manualChoice, keys, models } = get();
   if (!autoRoute && manualChoice) {
+    if (manualChoice.provider === "web-local") {
+      let enabled = false;
+      try { enabled = localStorage.getItem("blitzbot.browser-ai.enabled") === "true"; } catch { enabled = false; }
+      if (!enabled) return route(prompt, keys, models);
+    }
     return { provider: manualChoice.provider, model: manualChoice.model, reason: "manual selection" };
   }
   return route(prompt, keys, models);
