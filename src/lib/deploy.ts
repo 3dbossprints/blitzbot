@@ -36,20 +36,30 @@ export async function deployToNetlify(
   assets: Record<string, string>,
   token: string,
   projectName: string,
+  existingSiteId = "",
 ): Promise<DeploymentResult> {
   if (!token.trim()) throw new Error("Enter a Netlify personal access token in Settings → Deployment.");
   if (!assets["index.html"]) throw new Error("The production build is missing index.html.");
+
   const name = slugify(projectName);
-  const site = await fetchJson("https://api.netlify.com/api/v1/sites", {
-    method: "POST",
-    headers: {
-      Authorization: "Bearer " + token.trim(),
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify({ name }),
-  });
-  if (!site.id) throw new Error("Netlify created no site ID. Check your Netlify dashboard.");
+  let site: any;
+  if (existingSiteId.trim()) {
+    site = await fetchJson("https://api.netlify.com/api/v1/sites/" + encodeURIComponent(existingSiteId.trim()), {
+      headers: { Authorization: "Bearer " + token.trim(), Accept: "application/json" },
+    });
+  } else {
+    site = await fetchJson("https://api.netlify.com/api/v1/sites", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + token.trim(),
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({ name }),
+    });
+  }
+  if (!site.id) throw new Error("Netlify returned no site ID. Check your Netlify dashboard.");
+
   const deploy = await fetchJson("https://api.netlify.com/api/v1/sites/" + encodeURIComponent(site.id) + "/deploys", {
     method: "POST",
     headers: {
@@ -61,9 +71,9 @@ export async function deployToNetlify(
   });
   const url = deploy.ssl_url || deploy.deploy_ssl_url || site.ssl_url || site.url;
   if (!url) throw new Error("Netlify accepted the deploy but did not return a site URL. Check your Netlify dashboard.");
-  return { provider: "netlify", url, id: deploy.id || site.id, state: deploy.state || deploy.processing_state };
+  // id deliberately points to the site, so later clicks update the same site.
+  return { provider: "netlify", url, id: String(site.id), state: deploy.state || deploy.processing_state };
 }
-
 export async function deployToVercel(
   assets: Record<string, string>,
   token: string,
