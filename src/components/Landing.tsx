@@ -115,7 +115,7 @@ export function Landing({ onNavigate }: { onNavigate: (page: "home" | "build" | 
           </a>
           <button className="quiet-link as-button" onClick={() => onNavigate("build")}>Build</button>
           <button className="quiet-link as-button" onClick={() => onNavigate("chat")}>Chat</button>
-          <button className="quiet-link as-button" onClick={() => setSettingsOpen(true)}>Keys</button>
+          <button className="quiet-link as-button" onClick={() => setSettingsOpen(true)}>Settings</button>
         </nav>
       </header>
 
@@ -150,7 +150,7 @@ export function Landing({ onNavigate }: { onNavigate: (page: "home" | "build" | 
             </button>
           </span>
           <button className="chip as-button" onClick={() => setSettingsOpen(true)}>
-            {keysReady ? "keys ✓" : "add a key to start"}
+            {keysReady ? "AI connected ✓" : "connect an AI to start"}
           </button>
           <span className="chip">
             {autoRoute ? (preview ? `auto → ${preview.model}` : "model: auto") : `model: ${manualChoice?.model ?? "auto"}`}
