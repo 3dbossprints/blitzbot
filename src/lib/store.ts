@@ -135,6 +135,7 @@ interface State extends Prefs {
   pickWinner: (key: string) => Promise<void>;
   discardCompare: () => void;
   dispatch: (prompt: string) => void;
+  removeChatEntry: (id: string) => void;
 }
 
 const KEYS_STORAGE = "codecanvas.keys.v1";
@@ -242,6 +243,11 @@ export const useStore = create<State>((set, get) => ({
   setProjectsOpen: (projectsOpen) => set({ projectsOpen }),
 
   log: (line) => set((s) => ({ logs: [...s.logs.slice(-499), line] })),
+
+  removeChatEntry: (id) => {
+    set((s) => ({ chat: s.chat.filter((entry) => entry.id !== id) }));
+    schedulePersist(set, get);
+  },
 
   editFile: (path, contents) => {
     set((s) => ({ files: { ...s.files, [path]: contents } }));
@@ -534,6 +540,18 @@ export const useStore = create<State>((set, get) => ({
 type Set = (fn: Partial<State> | ((s: State) => Partial<State>)) => void;
 type Get = () => State;
 
+function getConfiguredPrompt(base: string): string {
+  try {
+    const custom = localStorage.getItem("blitzbot.base-prompt.v1")?.trim() ?? "";
+    const skills = JSON.parse(localStorage.getItem("blitzbot.skills.v1") ?? "[]") as { name?: string; content?: string; enabled?: boolean }[];
+    const activeSkills = Array.isArray(skills) ? skills.filter((s) => s.enabled && s.content?.trim()) : [];
+    const skillText = activeSkills.map((s) => `### Skill: ${s.name ?? "Uploaded skill"}\n${s.content}`).join("\n\n");
+    return [base, custom ? `USER BASE PROMPT / INSTRUCTIONS:\n${custom}` : "", skillText ? `ACTIVE USER SKILLS:\n${skillText}` : ""].filter(Boolean).join("\n\n");
+  } catch {
+    return base;
+  }
+}
+
 function savePrefs(s: State) {
   const prefs: Prefs = {
     autoRoute: s.autoRoute,
@@ -719,12 +737,12 @@ async function runIdeate(prompt: string, entryId: string, set: Set, get: Get) {
     { role: "user", content: prompt },
   ]);
 
-  const guard = makeCapGuard(choice, IDEATE_PROMPT + messages.map((m) => m.content).join(""), get);
+  const guard = makeCapGuard(choice, getConfiguredPrompt(IDEATE_PROMPT) + messages.map((m) => m.content).join(""), get);
   try {
     const usage = await streamChat({
       provider: choice.provider,
       model: choice.model,
-      system: IDEATE_PROMPT,
+      system: getConfiguredPrompt(IDEATE_PROMPT),
       messages,
       keys: get().keys,
       signal: guard.controller.signal,
@@ -836,14 +854,14 @@ async function runBuild(job: QueuedJob, set: Set, get: Get) {
   }
   messages.push({ role: "user", content: prompt });
 
-  const guard = makeCapGuard(choice, SYSTEM_PROMPT + messages.map((m) => m.content).join(""), get);
+  const guard = makeCapGuard(choice, getConfiguredPrompt(SYSTEM_PROMPT) + messages.map((m) => m.content).join(""), get);
   let usage;
   let aborted = false;
   try {
     usage = await streamChat({
       provider: choice.provider,
       model: choice.model,
-      system: SYSTEM_PROMPT,
+      system: getConfiguredPrompt(SYSTEM_PROMPT),
       messages,
       keys: get().keys,
       signal: guard.controller.signal,
@@ -858,7 +876,7 @@ async function runBuild(job: QueuedJob, set: Set, get: Get) {
     if (guard.hit()) {
       aborted = true;
       usage = {
-        inputTokens: estimateTokens(SYSTEM_PROMPT + messages.map((m) => m.content).join("")),
+        inputTokens: estimateTokens(getConfiguredPrompt(SYSTEM_PROMPT) + messages.map((m) => m.content).join("")),
         outputTokens: 0,
         estimated: true,
       };
