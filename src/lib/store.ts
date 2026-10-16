@@ -266,7 +266,25 @@ export const useStore = create<State>((set, get) => ({
 
   refreshModels: async (provider) => {
     const { keys } = get();
-    const hasKey = provider === "web-local" ? false : provider === "ollama" ? keys.ollamaUrl : keys[provider];
+    let hasKey = "";
+    switch (provider) {
+      case "openai":
+        hasKey = keys.openai;
+        break;
+      case "anthropic":
+        hasKey = keys.anthropic;
+        break;
+      case "openrouter":
+        hasKey = keys.openrouter;
+        break;
+      case "ollama":
+        hasKey = keys.ollamaUrl;
+        break;
+      case "web-local":
+        // Browser-local models do not use an API key and are loaded on demand.
+        hasKey = "";
+        break;
+    }
     if (!hasKey) {
       set((s) => ({ models: { ...s.models, [provider]: undefined } }));
       return;
