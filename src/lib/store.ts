@@ -949,7 +949,7 @@ async function runBuild(job: QueuedJob, set: Set, get: Get) {
       await streamChat({
         provider: choice.provider,
         model: choice.model,
-        system: SYSTEM_PROMPT,
+        system: getConfiguredPrompt(SYSTEM_PROMPT),
         messages: [{ role: "user", content: README_PROMPT(prompt, Object.keys(get().files)) }],
         keys: get().keys,
         onText: (t) => readmeParser.push(t),
@@ -1023,12 +1023,12 @@ async function runCompare(job: QueuedJob, set: Set, get: Get) {
           updateCandidate(cand.key, (c) => ({ files: { ...c.files, [path]: contents } })),
       });
       const choice: ModelChoice = { provider: cand.provider, model: cand.model, reason: "compare" };
-      const guard = makeCapGuard(choice, SYSTEM_PROMPT + messages.map((m) => m.content).join(""), get);
+      const guard = makeCapGuard(choice, getConfiguredPrompt(SYSTEM_PROMPT) + messages.map((m) => m.content).join(""), get);
       try {
         const usage = await streamChat({
           provider: cand.provider,
           model: cand.model,
-          system: SYSTEM_PROMPT,
+          system: getConfiguredPrompt(SYSTEM_PROMPT),
           messages,
           keys: get().keys,
           signal: guard.controller.signal,
