@@ -29,7 +29,7 @@ export function SettingsModal() {
   const error = useStore((s) => s.error);
   const files = useStore((s) => s.files);
   const editFile = useStore((s) => s.editFile);
-  const [backendStatus, setBackendStatus] = useState<string>("");
+  const [backendStatus, setBackendStatus] = useState<string>("");\n  const [localAiEnabled, setLocalAiEnabled] = useState(() => { try { return localStorage.getItem("blitzbot.browser-ai.enabled") === "true"; } catch { return false; } });\n  const [localModel, setLocalModel] = useState(() => { try { return localStorage.getItem("blitzbot.browser-ai.model") || "onnx-community/Qwen2.5-Coder-1.5B-Instruct"; } catch { return "onnx-community/Qwen2.5-Coder-1.5B-Instruct"; } });
   const [backendBusy, setBackendBusy] = useState(false);
 
   async function testBackend(kind: "supabase" | "appwrite") {
@@ -96,6 +96,38 @@ export function SettingsModal() {
           BlitzBot server — check the network tab.
         </p>
         {error && <p className="modal-error">{error}</p>}
+
+        <section className="browser-ai-settings">
+          <div className="field-row"><span className="field-label-strong">Browser-local coding AI (optional)</span></div>
+          <p className="field-hint">Runs inference in this browser. No AI API key is needed. The model downloads only when first used and may require several GB of storage and memory. First use can take a while.</p>
+          <label className="check">
+            <input type="checkbox" checked={localAiEnabled} onChange={(e) => {
+              const enabled = e.target.checked;
+              setLocalAiEnabled(enabled);
+              try { localStorage.setItem("blitzbot.browser-ai.enabled", String(enabled)); } catch {}
+              if (enabled) {
+                setPref({ autoRoute: false, manualChoice: { provider: "web-local", model: localModel } });
+              } else {
+                setPref({ autoRoute: true, manualChoice: null });
+                void import("../lib/providers").then((m) => m.unloadBrowserLocalModel());
+              }
+            }} />
+            <span>Enable browser-local AI as my selected provider</span>
+          </label>
+          <label className="field">
+            <span>Model size</span>
+            <select value={localModel} onChange={(e) => {
+              const model = e.target.value;
+              setLocalModel(model);
+              try { localStorage.setItem("blitzbot.browser-ai.model", model); } catch {}
+              if (localAiEnabled) setPref({ autoRoute: false, manualChoice: { provider: "web-local", model } });
+            }}>
+              <option value="onnx-community/Qwen2.5-Coder-1.5B-Instruct">Small · ~2B class, recommended</option>
+              <option value="onnx-community/Qwen2.5-Coder-3B-Instruct">Larger · up to ~6 GB device memory</option>
+            </select>
+          </label>
+          <p className="field-hint">When enabled, this explicitly selected local model is used instead of cloud/local API providers. Turn it off to return to automatic routing. Model availability and browser hardware support vary by device.</p>
+        </section>
 
         <div className="field-row"><span className="field-label-strong">Backend connections for your generated app</span></div>
         <p className="field-hint">These settings are saved in this browser. They configure generated projects; they do not connect BlitzBot's own project history to a remote database. Only use public client credentials here.</p>
