@@ -68,7 +68,7 @@ function ImportForm() {
   );
 }
 
-export function Landing({ onNavigate }: { onNavigate: (page: "home" | "build" | "chat") => void }) {
+export function Landing({ onNavigate, theme, onToggleTheme }: { onNavigate: (page: "home" | "build" | "chat") => void; theme: "light" | "dark"; onToggleTheme: () => void }) {
   const [value, setValue] = useState("");
   const [importOpen, setImportOpen] = useState(false);
   const keys = useStore((s) => s.keys);
@@ -114,7 +114,7 @@ export function Landing({ onNavigate }: { onNavigate: (page: "home" | "build" | 
             Source
           </a>
           <button className="quiet-link as-button" onClick={() => onNavigate("build")}>Build</button>
-          <button className="quiet-link as-button" onClick={() => onNavigate("chat")}>Chat</button>
+          <button className="quiet-link as-button" onClick={() => onNavigate("chat")}>Chat</button>\n          <button className="quiet-link as-button theme-toggle" onClick={onToggleTheme} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}>{theme === "dark" ? "☀ Light" : "☾ Dark"}</button>
           <button className="quiet-link as-button" onClick={() => setSettingsOpen(true)}>Settings</button>
         </nav>
       </header>
