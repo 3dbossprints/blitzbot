@@ -124,7 +124,7 @@ export function SettingsModal() {
       if (!response.ok) throw new Error("HTTP " + response.status + ". Check the token and its permissions.");
       const data = await response.json() as { user?: { username?: string }; full_name?: string; email?: string };
       const account = data.user?.username ?? data.full_name ?? data.email ?? "account";
-      setSettingsNotice((kind === "vercel" ? "Vercel" : "Netlify") + " credentials verified for " + account + ". Deployment publishing is not wired up yet.");
+      setSettingsNotice((kind === "vercel" ? "Vercel" : "Netlify") + " credentials verified for " + account + ".");
     } catch (error) {
       setSettingsNotice((kind === "vercel" ? "Vercel" : "Netlify") + " connection failed: " + (error instanceof Error ? error.message : String(error)));
     } finally { setBackendBusy(false); }
@@ -186,7 +186,7 @@ export function SettingsModal() {
   }
 
   if (!open) return null;
-  const groups = manualGroups(keys, models);
+  const groups = manualGroups(keys, models).filter((group) => localAiEnabled || group.provider !== "web-local");
   const ollamaList = models.ollama ?? [];
   const openrouterList = models.openrouter ?? [];
   const isPicked = (provider: ProviderId, model: string) =>
