@@ -388,12 +388,12 @@ export function SettingsModal() {
             <button className="quiet-link as-button" disabled={backendBusy} onClick={() => void testDeployment("netlify")}>Test Netlify connection</button>
           </div>
         </section>
-        <section id="settings-gitlab" className="settings-section">
+        <section id="settings-git" className="settings-section">
           <h3>GitLab</h3>
           <label className="field"><span>GitLab personal access token</span><input type="password" value={integrationSettings.gitlabToken ?? ""} onChange={(e) => saveIntegrationSettings({ ...integrationSettings, gitlabToken: e.target.value })} placeholder="glpat-…" autoComplete="off" /></label>
           <p className="field-hint">GitLab API actions need a server-side integration before this token can be used to push or import repositories.</p>
         </section>
-        <section id="settings-custom-mcp" className="settings-section">
+        <section id="settings-mcp" className="settings-section">
           <h3>Custom MCP</h3>
           <label className="field"><span>MCP bridge endpoint</span><input value={integrationSettings.mcpUrl ?? ""} onChange={(e) => saveIntegrationSettings({ ...integrationSettings, mcpUrl: e.target.value })} placeholder="https://your-mcp-bridge.example.com" /></label>
           <p className="field-hint">This saves an endpoint for setup. An active MCP session requires a trusted server-side bridge; entering a URL alone does not connect it.</p>
