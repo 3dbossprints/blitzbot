@@ -62,6 +62,8 @@ function keyFor(keys: Keys, p: ProviderId): string {
       return keys.openrouter;
     case "ollama":
       return keys.ollamaUrl;
+    case "web-local":
+      return "browser-local";
   }
 }
 
