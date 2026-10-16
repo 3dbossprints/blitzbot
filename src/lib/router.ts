@@ -70,6 +70,7 @@ function keyFor(keys: Keys, p: ProviderId): string {
 function pickFrom(models: ModelMap, provider: ProviderId, tier: Tier, keys: Keys): string {
   if (provider === "openrouter") return keys.openrouterModel;
   if (provider === "ollama") return keys.ollamaModel || models.ollama?.[0]?.id || "";
+  if (provider === "web-local") return "";
   const list = models[provider];
   if (list?.length) {
     for (const re of RANK[provider][tier]) {
