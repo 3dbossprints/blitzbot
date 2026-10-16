@@ -5,7 +5,8 @@ import { ChatPane } from "./ChatPane";
 export function ChatPage({ onNavigate, theme, onToggleTheme }: { onNavigate: (page: "home" | "build" | "chat") => void; theme: "light" | "dark"; onToggleTheme: () => void }) {
   const setPref = useStore((s) => s.setPref);
   const startNewProject = useStore((s) => s.startNewProject);
-  const setProjectsOpen = useStore((s) => s.setProjectsOpen);\n  const setSettingsOpen = useStore((s) => s.setSettingsOpen);
+  const setProjectsOpen = useStore((s) => s.setProjectsOpen);
+  const setSettingsOpen = useStore((s) => s.setSettingsOpen);
   useEffect(() => {
     setPref({ mode: "ideate" });
   }, [setPref]);
@@ -19,7 +20,9 @@ export function ChatPage({ onNavigate, theme, onToggleTheme }: { onNavigate: (pa
           <button className="btn-ghost btn-sm" onClick={() => setProjectsOpen(true)}>History</button>
           <button className="btn-ghost btn-sm" onClick={() => void startNewProject()}>New chat</button>
           <button className="btn-ghost btn-sm" onClick={() => onNavigate("home")}>Home</button>
-          <button className="btn-ghost btn-sm" onClick={() => onNavigate("build")}>Build</button>\n          <button className="btn-ghost btn-sm theme-toggle" onClick={onToggleTheme} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}>{theme === "dark" ? "☀ Light" : "☾ Dark"}</button>\n          <button className="btn-ghost btn-sm" onClick={() => setSettingsOpen(true)}>Settings</button>
+          <button className="btn-ghost btn-sm" onClick={() => onNavigate("build")}>Build</button>
+          <button className="btn-ghost btn-sm theme-toggle" onClick={onToggleTheme} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}>{theme === "dark" ? "☀ Light" : "☾ Dark"}</button>
+          <button className="btn-ghost btn-sm" onClick={() => setSettingsOpen(true)}>Settings</button>
         </div>
       </header>
       <main className="dedicated-chat-main">
