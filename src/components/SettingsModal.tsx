@@ -378,7 +378,7 @@ export function SettingsModal() {
           Toggle "⇄ compare" on the input to race these on your next build and pick the winner. Each
           candidate bills its own tokens.
         </p>
-        <section className="settings-section">
+        <section id="settings-deployment" className="settings-section">
           <h3>Deployment</h3>
           <p className="field-hint">Save tokens for later deployment integration. This does not deploy a project by itself.</p>
           <label className="field"><span>Vercel access token</span><input type="password" value={integrationSettings.vercelToken ?? ""} onChange={(e) => saveIntegrationSettings({ ...integrationSettings, vercelToken: e.target.value })} placeholder="Vercel token" autoComplete="off" /></label>
@@ -388,22 +388,22 @@ export function SettingsModal() {
             <button className="quiet-link as-button" disabled={backendBusy} onClick={() => void testDeployment("netlify")}>Test Netlify connection</button>
           </div>
         </section>
-        <section className="settings-section">
+        <section id="settings-gitlab" className="settings-section">
           <h3>GitLab</h3>
           <label className="field"><span>GitLab personal access token</span><input type="password" value={integrationSettings.gitlabToken ?? ""} onChange={(e) => saveIntegrationSettings({ ...integrationSettings, gitlabToken: e.target.value })} placeholder="glpat-…" autoComplete="off" /></label>
           <p className="field-hint">GitLab API actions need a server-side integration before this token can be used to push or import repositories.</p>
         </section>
-        <section className="settings-section">
+        <section id="settings-custom-mcp" className="settings-section">
           <h3>Custom MCP</h3>
           <label className="field"><span>MCP bridge endpoint</span><input value={integrationSettings.mcpUrl ?? ""} onChange={(e) => saveIntegrationSettings({ ...integrationSettings, mcpUrl: e.target.value })} placeholder="https://your-mcp-bridge.example.com" /></label>
           <p className="field-hint">This saves an endpoint for setup. An active MCP session requires a trusted server-side bridge; entering a URL alone does not connect it.</p>
         </section>
-        <section className="settings-section">
+        <section id="settings-base-prompt" className="settings-section">
           <h3>Base prompt</h3>
           <p className="field-hint">Persistent instructions appended to the built-in prompt for future coding and ideation requests.</p>
           <label className="field"><span>Your instructions</span><textarea rows={6} value={basePrompt} onChange={(e) => { setBasePrompt(e.target.value); try { localStorage.setItem("blitzbot.base-prompt.v1", e.target.value); } catch {} }} placeholder="Prefer accessible React components, TypeScript, and minimal dependencies…" /></label>
         </section>
-        <section className="settings-section">
+        <section id="settings-skills" className="settings-section">
           <h3>Skills</h3>
           <p className="field-hint">Upload .md, .txt, or .json instructions (under 100 KB each). Enabled skills are included in future model context and stored in this browser.</p>
           <label className="field"><span>Upload skill files</span><input type="file" accept=".md,.txt,.json,text/plain,text/markdown,application/json" multiple onChange={(e) => { void importSkills(e.target.files); e.currentTarget.value = ""; }} /></label>
