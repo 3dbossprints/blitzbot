@@ -384,8 +384,31 @@ export const useStore = create<State>((set, get) => ({
   },
 
   removeProject: async (id) => {
+    const deletingCurrent = get().projectId === id;
+    // Cancel the debounced autosave before deleting the record, otherwise it
+    // could recreate a just-deleted chat under a new ID.
+    if (deletingCurrent) flushPersist();
     await deleteProjectRecord(id);
-    if (get().projectId === id) set({ projectId: null });
+    if (deletingCurrent) {
+      await resetContainer();
+      set({
+        phase: "landing",
+        projectId: null,
+        prompt: "",
+        chat: [],
+        files: {},
+        checkpoints: [],
+        activeFile: null,
+        writingFile: null,
+        previewUrl: null,
+        logs: [],
+        error: null,
+        containerLive: false,
+        buildBusy: false,
+        buildQueue: [],
+        compare: null,
+      });
+    }
     await get().loadProjects();
   },
 
