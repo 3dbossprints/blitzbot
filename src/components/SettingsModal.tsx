@@ -134,13 +134,12 @@ export function SettingsModal() {
           </button>
         </div>
 
-        <p className="trust-note">
-          AI credentials are stored in this browser's localStorage and sent only to the provider you select.
-          Projects and chats are saved on this device (IndexedDB), never uploaded. There is no
-          BlitzBot server — check the network tab.
-        </p>
+        <p className="trust-note">Configure AI, databases, deployment, Git, MCP, reusable base instructions, and uploaded skills. Browser-only credentials are stored locally; never expose server-only secrets such as Supabase service-role keys.</p>
+        <nav className="settings-section-nav" aria-label="Settings sections">
+          <a href="#settings-ai">AI</a><a href="#settings-databases">Databases</a><a href="#settings-deployment">Deployment</a><a href="#settings-git">Git</a><a href="#settings-mcp">MCP</a><a href="#settings-base-prompt">Base prompt</a><a href="#settings-skills">Skills</a>
+        </nav>
         {error && <p className="modal-error">{error}</p>}
-        <section className="browser-ai-settings">
+        <section id="settings-ai" className="browser-ai-settings settings-section"><h3>AI providers</h3>
           <div className="field-row"><span className="field-label-strong">Browser-local coding AI (optional)</span></div>
           <p className="field-hint">Runs in this browser with no personal API key. Model weights download only when first enabled and used. First load may take a while and needs storage and available memory.</p>
           <label className="check"><input type="checkbox" checked={localAiEnabled} onChange={(e) => {
@@ -157,7 +156,7 @@ export function SettingsModal() {
           <p className="field-hint">This provider is only selected when you enable it. Turn it off to return to automatic routing. Device compatibility and memory use vary.</p>
         </section>
 
-        <div className="field-row"><span className="field-label-strong">Backend connections for your generated app</span></div>
+        <div id="settings-databases" className="field-row settings-section"><h3>Databases & backends</h3><span className="field-label-strong">Connections for generated apps</span></div>
         <p className="field-hint">These settings are saved in this browser. They configure generated projects; they do not connect BlitzBot's own project history to a remote database. Only use public client credentials here.</p>
         <label className="field">
           <span>Supabase project URL</span>
@@ -180,6 +179,9 @@ export function SettingsModal() {
         <button className="quiet-link as-button" onClick={applyBackendEnv}>Apply configured values to current app (.env.local)</button>
         {backendStatus && <p className="field-hint">{backendStatus}</p>}
         <p className="field-hint">Never paste a Supabase secret/service-role key or an Appwrite server API key here. For Supabase, enable Row Level Security and restrict policies. Add your deployed hostname as a Web platform in Appwrite Console.</p>
+        <label className="field"><span>MongoDB URI (server-side only)</span><input type="password" value={integrationSettings.mongoUri ?? ""} onChange={(e) => saveIntegrationSettings({ ...integrationSettings, mongoUri: e.target.value })} placeholder="mongodb+srv://…" autoComplete="off" /></label>
+        <label className="field"><span>rqlite API URL</span><input value={integrationSettings.rqliteUrl ?? ""} onChange={(e) => saveIntegrationSettings({ ...integrationSettings, rqliteUrl: e.target.value })} placeholder="http://localhost:4001" /></label>
+        <label className="field"><span>PocketBase URL</span><input value={integrationSettings.pocketbaseUrl ?? ""} onChange={(e) => saveIntegrationSettings({ ...integrationSettings, pocketbaseUrl: e.target.value })} placeholder="https://your-instance.example.com" /></label>
 
         <label className="field">
           <span>OpenAI API key</span>
