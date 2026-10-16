@@ -3,6 +3,7 @@ import { useStore } from "../lib/store";
 import type { ChatEntry } from "../lib/store";
 import { fmtUsd } from "../lib/pricing";
 import type { FileChange } from "../lib/types";
+import { callMcpTool, type McpTool } from "../lib/mcp";
 
 function Receipt({ entry }: { entry: ChatEntry }) {
   const r = entry.receipt;
@@ -61,6 +62,7 @@ function Diffs({ changes }: { changes: FileChange[] }) {
 
 export function ChatPane({ ideateOnly = false }: { ideateOnly?: boolean }) {
   const chat = useStore((s) => s.chat);
+  const keys = useStore((s) => s.keys);
   const writingFile = useStore((s) => s.writingFile);
   const buildBusy = useStore((s) => s.buildBusy);
   const mode = useStore((s) => s.mode);
@@ -72,11 +74,27 @@ export function ChatPane({ ideateOnly = false }: { ideateOnly?: boolean }) {
   const restoreCheckpoint = useStore((s) => s.restoreCheckpoint);
   const checkpoints = useStore((s) => s.checkpoints);
   const [value, setValue] = useState("");
+  const [plusOpen, setPlusOpen] = useState(false);
+  const [attachedConnections, setAttachedConnections] = useState<string[]>([]);
+  const [toolResults, setToolResults] = useState<string[]>([]);
+  const [toolBusy, setToolBusy] = useState<string | null>(null);
+  const [toolStatus, setToolStatus] = useState("");
+  const [integrationSettings, setIntegrationSettings] = useState<Record<string, string>>(() => {
+    try { return JSON.parse(localStorage.getItem("blitzbot.integrations.v1") ?? "{}"); } catch { return {}; }
+  });
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
   }, [chat, writingFile]);
+
+  useEffect(() => {
+    const refresh = () => {
+      try { setIntegrationSettings(JSON.parse(localStorage.getItem("blitzbot.integrations.v1") ?? "{}")); } catch { setIntegrationSettings({}); }
+    };
+    window.addEventListener("blitzbot-integrations-updated", refresh);
+    return () => window.removeEventListener("blitzbot-integrations-updated", refresh);
+  }, []);
 
   const compareReady = compareModels.length >= 2;
 
