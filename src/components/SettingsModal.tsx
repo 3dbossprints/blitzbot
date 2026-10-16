@@ -253,6 +253,7 @@ export function SettingsModal() {
           <label className="check"><input type="checkbox" checked={localAiEnabled} onChange={(e) => {
             const enabled = e.target.checked; setLocalAiEnabled(enabled);
             try { localStorage.setItem("blitzbot.browser-ai.enabled", String(enabled)); } catch {}
+            window.dispatchEvent(new Event("blitzbot-integrations-updated"));
             if (enabled) setPref({ autoRoute: false, manualChoice: { provider: "web-local", model: localModel } });
             else { setPref({ autoRoute: true, manualChoice: null }); void import("../lib/providers").then((m) => m.unloadBrowserLocalModel()); }
           }} /><span>Enable browser-local AI as my selected provider</span></label>
@@ -391,7 +392,16 @@ export function SettingsModal() {
             <input
               type="checkbox"
               checked={autoRoute}
-              onChange={(e) => setPref({ autoRoute: e.target.checked })}
+              onChange={(e) => {
+                const enabled = e.target.checked;
+                setPref({ autoRoute: enabled, ...(enabled && manualChoice?.provider === "web-local" ? { manualChoice: null } : {}) });
+                if (enabled && localAiEnabled) {
+                  setLocalAiEnabled(false);
+                  try { localStorage.setItem("blitzbot.browser-ai.enabled", "false"); } catch {}
+                  window.dispatchEvent(new Event("blitzbot-integrations-updated"));
+                  void import("../lib/providers").then((m) => m.unloadBrowserLocalModel());
+                }
+              }}
             />
             <span>Auto-route: pick the best model per task from your available models</span>
           </label>
@@ -406,7 +416,16 @@ export function SettingsModal() {
                 if (idx === -1) return;
                 const provider = e.target.value.slice(0, idx) as ProviderId;
                 const model = e.target.value.slice(idx + 2);
-                if (provider && model) setPref({ manualChoice: { provider, model } });
+                if (provider && model) {
+                  setPref({ autoRoute: false, manualChoice: { provider, model } });
+                  const useLocal = provider === "web-local";
+                  if (useLocal !== localAiEnabled) {
+                    setLocalAiEnabled(useLocal);
+                    try { localStorage.setItem("blitzbot.browser-ai.enabled", String(useLocal)); } catch {}
+                    window.dispatchEvent(new Event("blitzbot-integrations-updated"));
+                    if (!useLocal) void import("../lib/providers").then((m) => m.unloadBrowserLocalModel());
+                  }
+                }
               }}
             >
               <option value="" disabled>
