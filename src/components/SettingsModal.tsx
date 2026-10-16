@@ -30,7 +30,8 @@ export function SettingsModal() {
   const files = useStore((s) => s.files);
   const editFile = useStore((s) => s.editFile);
   const [backendStatus, setBackendStatus] = useState<string>("");
-  const [localAiEnabled, setLocalAiEnabled] = useState(() => { try { return localStorage.getItem("blitzbot.browser-ai.enabled") === "true"; } catch { return false; } });\n  const [localModel, setLocalModel] = useState(() => { try { return localStorage.getItem("blitzbot.browser-ai.model") || "onnx-community/Qwen2.5-Coder-1.5B-Instruct"; } catch { return "onnx-community/Qwen2.5-Coder-1.5B-Instruct"; } });
+  const [localAiEnabled, setLocalAiEnabled] = useState(() => { try { return localStorage.getItem("blitzbot.browser-ai.enabled") === "true"; } catch { return false; } });
+  const [localModel, setLocalModel] = useState(() => { try { return localStorage.getItem("blitzbot.browser-ai.model") || "onnx-community/Qwen2.5-Coder-1.5B-Instruct"; } catch { return "onnx-community/Qwen2.5-Coder-1.5B-Instruct"; } });
   const [backendBusy, setBackendBusy] = useState(false);
 
   async function testBackend(kind: "supabase" | "appwrite") {
