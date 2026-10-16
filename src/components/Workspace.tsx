@@ -101,6 +101,7 @@ export function Workspace({ onNavigate, theme, onToggleTheme }: { onNavigate: (p
           >
             Export
           </button>
+          <button className="btn-ghost btn-sm theme-toggle" onClick={onToggleTheme} title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}>{theme === "dark" ? "☀ Light" : "☾ Dark"}</button>
           <button className="btn-ghost btn-sm" onClick={() => setSettingsOpen(true)}>
             Settings
           </button>
