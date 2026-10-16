@@ -119,6 +119,10 @@ export function ChatPane({ ideateOnly = false }: { ideateOnly?: boolean }) {
     id: "mongodb", label: "MongoDB API", detail: integrationSettings.mongoProxyUrl,
     prompt: "Use the configured authenticated MongoDB proxy URL. MongoDB URI and credentials must remain in server environment variables, never client code."
   });
+  if (integrationSettings.databaseApiUrl) resources.push({
+    id: "database-api", label: "Secure database API", detail: integrationSettings.databaseApiUrl,
+    prompt: "Use the configured server-side database API at " + integrationSettings.databaseApiUrl + ". It is the safe bridge for privileged database operations; keep all service-role/admin credentials in the API host's server-only environment secrets. Never embed secrets in VITE_ variables."
+  });
   if (keys.github) resources.push({
     id: "github", label: "GitHub", detail: "GitHub token configured",
     prompt: "GitHub integration is configured. Never include its token in source, prompts, or logs. Use the Ship to GitHub action for publishing and confirm before changing remote branches."
@@ -169,6 +173,14 @@ export function ChatPane({ ideateOnly = false }: { ideateOnly?: boolean }) {
         if (!response.ok) throw new Error("rqlite returned HTTP " + response.status + ". Check network access, credentials, and CORS.");
         const body = (await response.text()).slice(0, 2500);
         summary = "rqlite status endpoint is reachable at " + base + ". Status response:\n" + body;
+      } else if (resource.id === "database-api") {
+        const base = (integrationSettings.databaseApiUrl ?? "").trim().replace(/\/+$/, "");
+        const headers: Record<string, string> = { Accept: "application/json" };
+        const token = (integrationSettings.databaseApiToken ?? "").trim();
+        if (token) headers.Authorization = "Bearer " + token;
+        const response = await fetch(base + "/health", { headers });
+        if (!response.ok) throw new Error("Your database API returned HTTP " + response.status + ". Verify its /health route and authentication.");
+        summary = "Secure database API is reachable at " + base + ". Use this server to perform privileged database operations; admin credentials should be configured as server-side environment secrets.";
       } else if (resource.id === "mongodb") {
         const endpoint = (integrationSettings.mongoProxyUrl ?? "").trim().replace(/\/+$/, "");
         const response = await fetch(endpoint, { headers: { Accept: "application/json" } });
