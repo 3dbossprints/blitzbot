@@ -6,25 +6,29 @@ import { ChatPage } from "./components/ChatPage";
 import { SettingsModal } from "./components/SettingsModal";
 import { PushModal } from "./components/PushModal";
 import { ProjectsDrawer } from "./components/ProjectsDrawer";
-
+type Theme = "light" | "dark";
+const THEME_KEY = "blitzbot.theme.v1";
 export default function App() {
   const [page, setPage] = useState<"home" | "build" | "chat">("home");
-  const onLanding = page === "home";
+  const [theme, setTheme] = useState<Theme>(() => {
+    try { return (localStorage.getItem(THEME_KEY) as Theme) || "light"; } catch { return "light"; }
+  });
   const navigate = (next: "home" | "build" | "chat") => {
     if (next === "build") useStore.getState().setPref({ mode: "build" });
     setPage(next);
   };
-
-  useEffect(() => {
-    void useStore.getState().initApp();
-  }, []);
-
-  return (
-    <div className={`app ${onLanding ? "app-light" : "app-dark"}`}>
-      {page === "home" ? <Landing onNavigate={navigate} /> : page === "chat" ? <ChatPage onNavigate={navigate} /> : <Workspace onNavigate={navigate} />}
-      <SettingsModal />
-      <PushModal />
-      <ProjectsDrawer />
+  const toggleTheme = () => setTheme((current) => {
+    const next = current === "dark" ? "light" : "dark";
+    try { localStorage.setItem(THEME_KEY, next); } catch { /* storage unavailable */ }
+    return next;
+  });
+  useEffect(() => { void useStore.getState().initApp(); }, []);
+  return <div className={`app app-${theme}`}>
+    {page === "home" ? <Landing onNavigate={navigate} /> : page === "chat" ? <ChatPage onNavigate={navigate} /> : <Workspace onNavigate={navigate} />}
+    <div className="global-utilities">
+      <button className="btn-ghost btn-sm" onClick={toggleTheme} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`} title="Toggle colour theme">{theme === "dark" ? "☀ Light mode" : "☾ Dark mode"}</button>
+      <button className="btn-ghost btn-sm" onClick={() => useStore.getState().setSettingsOpen(true)}>Settings</button>
     </div>
-  );
+    <SettingsModal /><PushModal /><ProjectsDrawer />
+  </div>;
 }
