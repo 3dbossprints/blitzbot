@@ -132,6 +132,68 @@ export function ChatPane({ ideateOnly = false }: { ideateOnly?: boolean }) {
     try { return JSON.parse(integrationSettings.mcpTools ?? "[]") as McpTool[]; } catch { return []; }
   })();
 
+  async function inspectConnection(resource: { id: string; label: string; detail: string; prompt: string }) {
+    setToolBusy(resource.id);
+    setToolStatus("Testing " + resource.label + " connection…");
+    try {
+      let summary = "";
+      if (resource.id === "supabase") {
+        const base = keys.supabaseUrl.trim().replace(/\/+$/, "");
+        const response = await fetch(base + "/rest/v1/", {
+          headers: {
+            apikey: keys.supabaseKey.trim(),
+            Authorization: "Bearer " + keys.supabaseKey.trim(),
+            Accept: "application/openapi+json",
+          },
+        });
+        const body = await response.text();
+        if (!response.ok) throw new Error("Supabase returned HTTP " + response.status + ". Check the project URL, publishable/anon key, and exposed schemas.");
+        let schema: any = {};
+        try { schema = JSON.parse(body); } catch {}
+        const paths = schema.paths && typeof schema.paths === "object" ? Object.keys(schema.paths) : [];
+        const tables = paths.filter((item) => item !== "/" && !item.startsWith("/rpc/") && !item.startsWith("/_"));
+        summary = "Supabase connection verified. REST resources exposed to this key: " + (tables.length ? tables.slice(0, 80).join(", ") : "The endpoint answered, but did not return a visible OpenAPI resource list.") + ". Use Row Level Security for write permissions.";
+      } else if (resource.id === "appwrite") {
+        const base = keys.appwriteEndpoint.trim().replace(/\/+$/, "");
+        const response = await fetch(base + "/health", { headers: { "X-Appwrite-Project": keys.appwriteProjectId.trim() } });
+        if (!response.ok) throw new Error("Appwrite returned HTTP " + response.status + ". Check endpoint, project platform configuration, and CORS.");
+        summary = "Appwrite health endpoint is reachable for project " + keys.appwriteProjectId + ". Server API keys remain server-side.";
+      } else if (resource.id === "pocketbase") {
+        const base = (integrationSettings.pocketbaseUrl ?? "").trim().replace(/\/+$/, "");
+        const response = await fetch(base + "/api/health");
+        if (!response.ok) throw new Error("PocketBase returned HTTP " + response.status + ". Verify the URL, CORS, and instance status.");
+        summary = "PocketBase health endpoint is reachable at " + base + ". Collection access still depends on the app's rules and user authentication.";
+      } else if (resource.id === "rqlite") {
+        const base = (integrationSettings.rqliteUrl ?? "").trim().replace(/\/+$/, "");
+        const response = await fetch(base + "/status");
+        if (!response.ok) throw new Error("rqlite returned HTTP " + response.status + ". Check network access, credentials, and CORS.");
+        const body = (await response.text()).slice(0, 2500);
+        summary = "rqlite status endpoint is reachable at " + base + ". Status response:\n" + body;
+      } else if (resource.id === "mongodb") {
+        const endpoint = (integrationSettings.mongoProxyUrl ?? "").trim().replace(/\/+$/, "");
+        const response = await fetch(endpoint, { headers: { Accept: "application/json" } });
+        if (!response.ok) throw new Error("MongoDB proxy returned HTTP " + response.status + ". The endpoint must provide an authenticated browser-safe API.");
+        summary = "MongoDB API/proxy endpoint is reachable at " + endpoint + ". This checks the API endpoint only; the actual MongoDB URI and credentials must stay on that server.";
+      } else if (resource.id === "github") {
+        const response = await fetch("https://api.github.com/user", { headers: { Authorization: "Bearer " + keys.github, Accept: "application/vnd.github+json" } });
+        const body = await response.json().catch(() => ({})) as { login?: string; message?: string };
+        if (!response.ok) throw new Error(body.message || "GitHub returned HTTP " + response.status);
+        summary = "GitHub connection verified for @" + (body.login ?? "user") + ".";
+      } else if (resource.id === "gitlab") {
+        const response = await fetch("https://gitlab.com/api/v4/user", { headers: { "PRIVATE-TOKEN": integrationSettings.gitlabToken ?? "" } });
+        const body = await response.json().catch(() => ({})) as { username?: string; message?: string };
+        if (!response.ok) throw new Error(body.message || "GitLab returned HTTP " + response.status);
+        summary = "GitLab connection verified for @" + (body.username ?? "user") + ".";
+      } else {
+        throw new Error("This connection type doesn't have a direct test yet.");
+      }
+      setToolResults((items) => [...items, "Connection test — " + resource.label + ":\n" + summary]);
+      setToolStatus(summary + " Result added to the context for your next message.");
+    } catch (error) {
+      setToolStatus(resource.label + " test failed: " + (error instanceof Error ? error.message : String(error)) + " If this is a browser CORS error, use a CORS-enabled endpoint or a server-side integration.");
+    } finally { setToolBusy(null); }
+  }
+
   async function runMcpTool(tool: McpTool) {
     const endpoint = (integrationSettings.mcpUrl ?? "").trim();
     if (!endpoint) { setToolStatus("Connect an MCP server in Settings first."); return; }
@@ -257,10 +319,13 @@ export function ChatPane({ ideateOnly = false }: { ideateOnly?: boolean }) {
             <div className="chat-attach-menu-head"><strong>Connections &amp; tools</strong><button className="as-button quiet-link" onClick={() => setPlusOpen(false)}>Close</button></div>
             <p className="field-hint">Select configured connections to include integration guidance with your next message. Credentials are never added to the prompt.</p>
             {resources.length === 0 && mcpTools.length === 0 && <p className="chat-attach-empty">No connections configured yet. Open Settings to add a database, Git provider or MCP server.</p>}
-            {resources.map((resource) => <label key={resource.id} className="chat-attach-item">
-              <input type="checkbox" checked={attachedConnections.includes(resource.id)} onChange={(e) => setAttachedConnections((items) => e.target.checked ? [...items, resource.id] : items.filter((id) => id !== resource.id))} />
-              <span><strong>{resource.label}</strong><small>{resource.detail}</small></span>
-            </label>)}
+            {resources.map((resource) => <div key={resource.id} className="chat-attach-resource">
+              <label className="chat-attach-item">
+                <input type="checkbox" checked={attachedConnections.includes(resource.id)} onChange={(e) => setAttachedConnections((items) => e.target.checked ? [...items, resource.id] : items.filter((id) => id !== resource.id))} />
+                <span><strong>{resource.label}</strong><small>{resource.detail}</small></span>
+              </label>
+              <button className="quiet-link as-button chat-resource-test" disabled={Boolean(toolBusy)} onClick={() => void inspectConnection(resource)}>{toolBusy === resource.id ? "Testing…" : "Test"}</button>
+            </div>)}
             {mcpTools.length > 0 && <div className="chat-mcp-tools">
               <div className="chat-attach-menu-subhead">MCP tools</div>
               {mcpTools.map((tool) => <div className="chat-mcp-tool" key={tool.name}>
