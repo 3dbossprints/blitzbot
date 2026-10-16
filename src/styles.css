@@ -1967,3 +1967,108 @@ button.chip:hover {
     display: none;
   }
 }
+
+
+/* Settings information architecture */
+.settings-icon {
+  width: 21px;
+  height: 21px;
+  flex: none;
+  color: var(--ink);
+  vertical-align: -4px;
+  margin-right: 8px;
+}
+.settings-section h3 {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: clamp(21px, 2.4vw, 25px);
+  line-height: 1.2;
+}
+.settings-section {
+  margin-top: 30px;
+  padding-top: 20px;
+}
+.settings-section > .field-hint {
+  max-width: 820px;
+}
+.settings-section-nav a {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(255,255,255,.5);
+  color: var(--graphite);
+  transition: background .15s ease, border-color .15s ease;
+}
+.settings-section-nav a:focus-visible {
+  outline-offset: 3px;
+}
+.app-dark .settings-section-nav a {
+  background: var(--studio-2);
+}
+.settings-titlebar {
+  min-height: 72px;
+}
+.modal-settings-fullscreen .field input,
+.modal-settings-fullscreen .field select,
+.modal-settings-fullscreen .field textarea {
+  border-color: var(--linen);
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.modal-settings-fullscreen .field input:focus,
+.modal-settings-fullscreen .field select:focus,
+.modal-settings-fullscreen .field textarea:focus {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(36, 48, 232, .08);
+  outline: none;
+}
+.settings-inline-actions .btn-primary {
+  min-height: 36px;
+}
+.deployment-status {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  padding: 10px 12px;
+  border-left: 3px solid var(--ink);
+  background: rgba(36, 48, 232, .06);
+  border-radius: 0 7px 7px 0;
+}
+.mcp-tool-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  border-top: 1px solid var(--linen);
+}
+.mcp-tool-list li {
+  padding: 9px 0;
+  border-bottom: 1px solid var(--linen);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.mcp-tool-list li span {
+  color: var(--ash);
+}
+.app-light .settings-section-nav a:hover {
+  background: #fff;
+}
+.app-dark .settings-section-nav a {
+  color: var(--gesso);
+  border-color: var(--linen);
+}
+.app-dark .settings-section-nav a:hover {
+  background: #27241f;
+  color: #fff;
+}
+@media (max-width: 680px) {
+  .settings-section h3 {
+    font-size: 21px;
+  }
+  .settings-section-nav {
+    gap: 6px;
+    padding: 8px 0;
+  }
+  .settings-section-nav a {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+}
