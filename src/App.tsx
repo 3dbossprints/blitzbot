@@ -24,11 +24,7 @@ export default function App() {
   });
   useEffect(() => { void useStore.getState().initApp(); }, []);
   return <div className={`app app-${theme}`}>
-    {page === "home" ? <Landing onNavigate={navigate} /> : page === "chat" ? <ChatPage onNavigate={navigate} /> : <Workspace onNavigate={navigate} />}
-    <div className="global-utilities">
-      <button className="btn-ghost btn-sm" onClick={toggleTheme} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`} title="Toggle colour theme">{theme === "dark" ? "☀ Light mode" : "☾ Dark mode"}</button>
-      <button className="btn-ghost btn-sm" onClick={() => useStore.getState().setSettingsOpen(true)}>Settings</button>
-    </div>
+    {page === "home" ? <Landing onNavigate={navigate} theme={theme} onToggleTheme={toggleTheme} /> : page === "chat" ? <ChatPage onNavigate={navigate} theme={theme} onToggleTheme={toggleTheme} /> : <Workspace onNavigate={navigate} theme={theme} onToggleTheme={toggleTheme} />}
     <SettingsModal /><PushModal /><ProjectsDrawer />
   </div>;
 }
