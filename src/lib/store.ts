@@ -256,10 +256,21 @@ export const useStore = create<State>((set, get) => ({
   initApp: async () => {
     void get().loadProjects();
     const { keys } = get();
-    const providers: ProviderId[] = ["openai", "anthropic", "openrouter", "ollama"];
+    const providers = ["openai", "anthropic", "openrouter", "ollama"] as const;
     await Promise.allSettled(
       providers
-        .filter((p) => (p === "ollama" ? keys.ollamaUrl : keys[p]))
+        .filter((p) => {
+          switch (p) {
+            case "openai":
+              return Boolean(keys.openai);
+            case "anthropic":
+              return Boolean(keys.anthropic);
+            case "openrouter":
+              return Boolean(keys.openrouter);
+            case "ollama":
+              return Boolean(keys.ollamaUrl);
+          }
+        })
         .map((p) => get().refreshModels(p)),
     );
   },
