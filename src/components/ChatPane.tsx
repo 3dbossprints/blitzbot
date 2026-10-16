@@ -68,6 +68,7 @@ export function ChatPane({ ideateOnly = false }: { ideateOnly?: boolean }) {
   const compareOn = useStore((s) => s.compareOn);
   const compareModels = useStore((s) => s.compareModels);
   const dispatch = useStore((s) => s.dispatch);
+  const removeChatEntry = useStore((s) => s.removeChatEntry);
   const restoreCheckpoint = useStore((s) => s.restoreCheckpoint);
   const checkpoints = useStore((s) => s.checkpoints);
   const [value, setValue] = useState("");
@@ -92,9 +93,11 @@ export function ChatPane({ ideateOnly = false }: { ideateOnly?: boolean }) {
       <div className="chat-scroll" ref={scrollRef}>
         {chat.map((m) => (
           <div key={m.id} className={`msg msg-${m.role}`}>
-            <div className="msg-role">
-              {m.role === "user" ? "you" : "canvas"}
-              {m.mode === "ideate" && <span className="mode-tag"> · ideate</span>}
+            <div className="msg-role msg-role-row">
+              <span>{m.role === "user" ? "you" : "BlitzBot"}{m.mode === "ideate" && <span className="mode-tag"> · ideate</span>}</span>
+              <button className="message-delete as-button" title="Delete this message" aria-label="Delete this message" onClick={() => {
+                if (window.confirm("Delete this message from the saved conversation?")) removeChatEntry(m.id);
+              }}>×</button>
             </div>
             <div className="msg-body">
               {m.content ||
