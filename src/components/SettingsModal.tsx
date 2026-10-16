@@ -31,6 +31,7 @@ export function SettingsModal() {
   const setPref = useStore((s) => s.setPref);
   const error = useStore((s) => s.error);
   const files = useStore((s) => s.files);
+  const projectPrompt = useStore((s) => s.prompt);
   const editFile = useStore((s) => s.editFile);
   const [backendStatus, setBackendStatus] = useState<string>("");
   const [localAiEnabled, setLocalAiEnabled] = useState(() => { try { return localStorage.getItem("blitzbot.browser-ai.enabled") === "true"; } catch { return false; } });
@@ -246,7 +247,8 @@ export function SettingsModal() {
         <button className="quiet-link as-button" onClick={applyBackendEnv}>Apply configured values to current app (.env.local)</button>
         {backendStatus && <p className="field-hint">{backendStatus}</p>}
         <p className="field-hint">Never paste a Supabase secret/service-role key or an Appwrite server API key here. For Supabase, enable Row Level Security and restrict policies. Add your deployed hostname as a Web platform in Appwrite Console.</p>
-        <label className="field"><span>MongoDB URI (server-side only)</span><input type="password" value={integrationSettings.mongoUri ?? ""} onChange={(e) => saveIntegrationSettings({ ...integrationSettings, mongoUri: e.target.value })} placeholder="mongodb+srv://…" autoComplete="off" /></label>
+        <label className="field"><span>MongoDB API/proxy URL</span><input value={integrationSettings.mongoProxyUrl ?? ""} onChange={(e) => saveIntegrationSettings({ ...integrationSettings, mongoProxyUrl: e.target.value })} placeholder="https://your-secure-api.example.com" /></label>
+        <p className="field-hint">MongoDB connection strings and database passwords belong in your server's environment variables. Connect through your own authenticated API; never put database admin credentials in browser storage.</p>
         <label className="field"><span>rqlite API URL</span><input value={integrationSettings.rqliteUrl ?? ""} onChange={(e) => saveIntegrationSettings({ ...integrationSettings, rqliteUrl: e.target.value })} placeholder="http://localhost:4001" /></label>
         <label className="field"><span>PocketBase URL</span><input value={integrationSettings.pocketbaseUrl ?? ""} onChange={(e) => saveIntegrationSettings({ ...integrationSettings, pocketbaseUrl: e.target.value })} placeholder="https://your-instance.example.com" /></label>
 
@@ -447,23 +449,37 @@ export function SettingsModal() {
         </p>
         <section id="settings-deployment" className="settings-section">
           <h3>Deployment</h3>
-          <p className="field-hint">Save tokens for later deployment integration. This does not deploy a project by itself.</p>
+          <p className="field-hint">Builds the current generated project in your browser and uploads the production assets. Review the host's dashboard after the upload. Tokens are stored locally in this browser.</p>
+          <label className="field"><span>Project / site name (optional)</span><input value={deployName} onChange={(e) => setDeployName(e.target.value)} placeholder="Use the project prompt by default" /></label>
           <label className="field"><span>Vercel access token</span><input type="password" value={integrationSettings.vercelToken ?? ""} onChange={(e) => saveIntegrationSettings({ ...integrationSettings, vercelToken: e.target.value })} placeholder="Vercel token" autoComplete="off" /></label>
           <label className="field"><span>Netlify access token</span><input type="password" value={integrationSettings.netlifyToken ?? ""} onChange={(e) => saveIntegrationSettings({ ...integrationSettings, netlifyToken: e.target.value })} placeholder="Netlify token" autoComplete="off" /></label>
           <div className="settings-inline-actions">
             <button className="quiet-link as-button" disabled={backendBusy} onClick={() => void testDeployment("vercel")}>Test Vercel connection</button>
             <button className="quiet-link as-button" disabled={backendBusy} onClick={() => void testDeployment("netlify")}>Test Netlify connection</button>
           </div>
+          <div className="settings-inline-actions">
+            <button className="btn-primary btn-sm" disabled={backendBusy || !Object.keys(files).length} onClick={() => void deployCurrentProject("vercel")}>{backendBusy ? "Working…" : "Build & deploy to Vercel"}</button>
+            <button className="btn-primary btn-sm" disabled={backendBusy || !Object.keys(files).length} onClick={() => void deployCurrentProject("netlify")}>{backendBusy ? "Working…" : "Build & deploy to Netlify"}</button>
+          </div>
+          {settingsNotice && <p className="field-hint deployment-status">{settingsNotice}</p>}
         </section>
         <section id="settings-git" className="settings-section">
-          <h3>GitLab</h3>
+          <h3>GitHub & GitLab</h3>
+          <p className="field-hint">GitHub repository import and publishing are available through the GitHub token and Ship to GitHub workflow. This section verifies GitLab credentials.</p>
           <label className="field"><span>GitLab personal access token</span><input type="password" value={integrationSettings.gitlabToken ?? ""} onChange={(e) => saveIntegrationSettings({ ...integrationSettings, gitlabToken: e.target.value })} placeholder="glpat-…" autoComplete="off" /></label>
-          <p className="field-hint">GitLab API actions need a server-side integration before this token can be used to push or import repositories.</p>
+          <div className="settings-inline-actions"><button className="quiet-link as-button" disabled={backendBusy} onClick={() => void testGitLab()}>Test GitLab connection</button></div>
         </section>
         <section id="settings-mcp" className="settings-section">
           <h3>Custom MCP</h3>
-          <label className="field"><span>MCP bridge endpoint</span><input value={integrationSettings.mcpUrl ?? ""} onChange={(e) => saveIntegrationSettings({ ...integrationSettings, mcpUrl: e.target.value })} placeholder="https://your-mcp-bridge.example.com" /></label>
-          <p className="field-hint">This saves an endpoint for setup. An active MCP session requires a trusted server-side bridge; entering a URL alone does not connect it.</p>
+          <p className="field-hint">Connect an MCP Streamable HTTP endpoint that permits browser CORS. Only connect servers you trust; tools can read or change external data.</p>
+          <label className="field"><span>MCP server endpoint</span><input value={integrationSettings.mcpUrl ?? ""} onChange={(e) => saveIntegrationSettings({ ...integrationSettings, mcpUrl: e.target.value })} placeholder="https://your-mcp-server.example.com/mcp" /></label>
+          <label className="field"><span>Optional bearer token</span><input type="password" value={integrationSettings.mcpToken ?? ""} onChange={(e) => saveIntegrationSettings({ ...integrationSettings, mcpToken: e.target.value })} placeholder="MCP access token" autoComplete="off" /></label>
+          <div className="settings-inline-actions">
+            <button className="btn-primary btn-sm" disabled={backendBusy} onClick={() => void connectCustomMcp()}>{backendBusy ? "Connecting…" : "Connect & discover tools"}</button>
+            <button className="quiet-link as-button" onClick={() => { setMcpTools([]); saveIntegrationSettings({ ...integrationSettings, mcpTools: "[]", mcpSessionId: "" }); setMcpStatus("Cleared the saved tool list."); }}>Clear tool list</button>
+          </div>
+          {mcpStatus && <p className="field-hint">{mcpStatus}</p>}
+          {mcpTools.length > 0 && <ul className="mcp-tool-list">{mcpTools.map((tool) => <li key={tool.name}><strong>{tool.name}</strong>{tool.description ? <span> — {tool.description}</span> : null}</li>)}</ul>}
         </section>
         <section id="settings-base-prompt" className="settings-section">
           <h3>Base prompt</h3>
