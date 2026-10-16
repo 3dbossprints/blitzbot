@@ -250,7 +250,30 @@ export function ChatPane({ ideateOnly = false }: { ideateOnly?: boolean }) {
           </button>
         )}
       </div>
-      <div className="chat-input-row">
+      <div className="chat-input-row chat-input-row-enhanced">
+        <div className="chat-attach-wrap">
+          <button type="button" className={"chat-plus-button" + (plusOpen ? " is-open" : "")} onClick={() => setPlusOpen((open) => !open)} aria-label="Attach a connection or run an MCP tool" title="Attach connections / MCP tools">+</button>
+          {plusOpen && <div className="chat-attach-menu">
+            <div className="chat-attach-menu-head"><strong>Connections &amp; tools</strong><button className="as-button quiet-link" onClick={() => setPlusOpen(false)}>Close</button></div>
+            <p className="field-hint">Select configured connections to include integration guidance with your next message. Credentials are never added to the prompt.</p>
+            {resources.length === 0 && mcpTools.length === 0 && <p className="chat-attach-empty">No connections configured yet. Open Settings to add a database, Git provider or MCP server.</p>}
+            {resources.map((resource) => <label key={resource.id} className="chat-attach-item">
+              <input type="checkbox" checked={attachedConnections.includes(resource.id)} onChange={(e) => setAttachedConnections((items) => e.target.checked ? [...items, resource.id] : items.filter((id) => id !== resource.id))} />
+              <span><strong>{resource.label}</strong><small>{resource.detail}</small></span>
+            </label>)}
+            {mcpTools.length > 0 && <div className="chat-mcp-tools">
+              <div className="chat-attach-menu-subhead">MCP tools</div>
+              {mcpTools.map((tool) => <div className="chat-mcp-tool" key={tool.name}>
+                <span><strong>{tool.name}</strong>{tool.description && <small>{tool.description}</small>}</span>
+                <button className="quiet-link as-button" disabled={Boolean(toolBusy)} onClick={() => void runMcpTool(tool)}>{toolBusy === tool.name ? "Running…" : "Run"}</button>
+              </div>)}
+            </div>}
+            {toolStatus && <p className="field-hint chat-tool-status">{toolStatus}</p>}
+            <div className="chat-attach-footer"><button className="btn-ghost btn-sm" onClick={() => useStore.getState().setSettingsOpen(true)}>Open Settings</button><button className="btn-primary btn-sm" onClick={() => setPlusOpen(false)}>Done</button></div>
+          </div>}
+        </div>
+        {attachedConnections.length > 0 && <span className="chat-attached-count" title="Selected connections are included with the next prompt">{attachedConnections.length} connected</span>}
+        {toolResults.length > 0 && <span className="chat-attached-count" title="MCP results will be sent with the next message">{toolResults.length} tool result{toolResults.length === 1 ? "" : "s"}</span>}
         <input
           value={value}
           onChange={(e) => setValue(e.target.value)}
