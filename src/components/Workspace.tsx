@@ -37,7 +37,7 @@ function clampLayout(next: Layout, containerW: number): Layout {
   return out;
 }
 
-export function Workspace({ onNavigate }: { onNavigate: (page: "home" | "build" | "chat") => void }) {
+export function Workspace({ onNavigate, theme, onToggleTheme }: { onNavigate: (page: "home" | "build" | "chat") => void; theme: "light" | "dark"; onToggleTheme: () => void }) {
   const setSettingsOpen = useStore((s) => s.setSettingsOpen);
   const setPushOpen = useStore((s) => s.setPushOpen);
   const setProjectsOpen = useStore((s) => s.setProjectsOpen);
