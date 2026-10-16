@@ -45,6 +45,22 @@ export function SettingsModal() {
     setIntegrationSettings(next);
     try { localStorage.setItem("blitzbot.integrations.v1", JSON.stringify(next)); } catch {}
   }
+  async function testDeployment(kind: "vercel" | "netlify") {
+    const token = integrationSettings[kind + "Token"]?.trim();
+    if (!token) { setSettingsNotice("Enter a " + (kind === "vercel" ? "Vercel" : "Netlify") + " access token first."); return; }
+    setBackendBusy(true);
+    setSettingsNotice("Checking " + (kind === "vercel" ? "Vercel" : "Netlify") + " credentials…");
+    try {
+      const url = kind === "vercel" ? "https://api.vercel.com/v2/user" : "https://api.netlify.com/api/v1/user";
+      const response = await fetch(url, { headers: { Authorization: "Bearer " + token } });
+      if (!response.ok) throw new Error("HTTP " + response.status + ". Check the token and its permissions.");
+      const data = await response.json() as { user?: { username?: string }; full_name?: string; email?: string };
+      const account = data.user?.username ?? data.full_name ?? data.email ?? "account";
+      setSettingsNotice((kind === "vercel" ? "Vercel" : "Netlify") + " credentials verified for " + account + ". Deployment publishing is not wired up yet.");
+    } catch (error) {
+      setSettingsNotice((kind === "vercel" ? "Vercel" : "Netlify") + " connection failed: " + (error instanceof Error ? error.message : String(error)));
+    } finally { setBackendBusy(false); }
+  }
   async function importSkills(files: FileList | null) {
     if (!files?.length) return;
     const added: { id: string; name: string; content: string; enabled: boolean }[] = [];
@@ -365,6 +381,10 @@ export function SettingsModal() {
           <p className="field-hint">Save tokens for later deployment integration. This does not deploy a project by itself.</p>
           <label className="field"><span>Vercel access token</span><input type="password" value={integrationSettings.vercelToken ?? ""} onChange={(e) => saveIntegrationSettings({ ...integrationSettings, vercelToken: e.target.value })} placeholder="Vercel token" autoComplete="off" /></label>
           <label className="field"><span>Netlify access token</span><input type="password" value={integrationSettings.netlifyToken ?? ""} onChange={(e) => saveIntegrationSettings({ ...integrationSettings, netlifyToken: e.target.value })} placeholder="Netlify token" autoComplete="off" /></label>
+          <div className="settings-inline-actions">
+            <button className="quiet-link as-button" disabled={backendBusy} onClick={() => void testDeployment("vercel")}>Test Vercel connection</button>
+            <button className="quiet-link as-button" disabled={backendBusy} onClick={() => void testDeployment("netlify")}>Test Netlify connection</button>
+          </div>
         </section>
         <section className="settings-section">
           <h3>GitLab</h3>
