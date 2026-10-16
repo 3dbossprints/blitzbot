@@ -114,7 +114,8 @@ export function Landing({ onNavigate, theme, onToggleTheme }: { onNavigate: (pag
             Source
           </a>
           <button className="quiet-link as-button" onClick={() => onNavigate("build")}>Build</button>
-          <button className="quiet-link as-button" onClick={() => onNavigate("chat")}>Chat</button>\n          <button className="quiet-link as-button theme-toggle" onClick={onToggleTheme} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}>{theme === "dark" ? "☀ Light" : "☾ Dark"}</button>
+          <button className="quiet-link as-button" onClick={() => onNavigate("chat")}>Chat</button>
+          <button className="quiet-link as-button theme-toggle" onClick={onToggleTheme} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}>{theme === "dark" ? "☀ Light" : "☾ Dark"}</button>
           <button className="quiet-link as-button" onClick={() => setSettingsOpen(true)}>Settings</button>
         </nav>
       </header>
