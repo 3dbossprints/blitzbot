@@ -102,7 +102,7 @@ export function Workspace({ onNavigate }: { onNavigate: (page: "home" | "build" 
             Export
           </button>
           <button className="btn-ghost btn-sm" onClick={() => setSettingsOpen(true)}>
-            Keys
+            Settings
           </button>
           <button className="btn-primary btn-sm" onClick={() => setPushOpen(true)} disabled={fileCount === 0}>
             Ship to GitHub
