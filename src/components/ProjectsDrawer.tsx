@@ -32,9 +32,9 @@ export function ProjectsDrawer() {
             {projects.map((p) => (
               <li key={p.id} className={`drawer-row ${p.id === projectId ? "current" : ""}`}>
                 <button className="drawer-open as-button" onClick={() => void openProject(p.id)}>
-                  <span className="drawer-title">{p.title}</span>
+                  <span className="drawer-title"><span className="project-site-icon" aria-hidden="true">{p.fileCount > 0 ? "◉" : "○"}</span>{p.title}</span>
                   <span className="drawer-meta">
-                    {p.fileCount} files · {timeAgo(p.updatedAt)}
+                    {p.fileCount > 0 ? "Website · " : "Chat · "}{p.fileCount} files · {timeAgo(p.updatedAt)}
                     {p.id === projectId ? " · open" : ""}
                   </span>
                 </button>
