@@ -1,4 +1,4 @@
-export type ProviderId = "openai" | "anthropic" | "openrouter" | "ollama";
+export type ProviderId = "openai" | "anthropic" | "openrouter" | "ollama" | "web-local";
 
 /** A model as reported by the provider's own /models endpoint. */
 export interface ModelInfo {
