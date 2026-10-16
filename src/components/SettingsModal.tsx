@@ -108,7 +108,10 @@ export function SettingsModal() {
       const name = deployName.trim() || projectPrompt || "blitzbot-project";
       const result = kind === "vercel"
         ? await deployToVercel(assets, token, name, (line) => setSettingsNotice(line))
-        : await deployToNetlify(assets, token, name);
+        : await deployToNetlify(assets, token, name, integrationSettings.netlifySiteId ?? "");
+      if (kind === "netlify" && result.id && result.id !== integrationSettings.netlifySiteId) {
+        saveIntegrationSettings({ ...integrationSettings, netlifySiteId: result.id });
+      }
       setSettingsNotice((kind === "vercel" ? "Vercel" : "Netlify") + " deployment submitted (" + (result.state ?? "status pending") + "): " + result.url);
     } catch (error) {
       setSettingsNotice((kind === "vercel" ? "Vercel" : "Netlify") + " deployment failed: " + (error instanceof Error ? error.message : String(error)));
@@ -537,6 +540,7 @@ export function SettingsModal() {
           <label className="field"><span>Project / site name (optional)</span><input value={deployName} onChange={(e) => setDeployName(e.target.value)} placeholder="Use the project prompt by default" /></label>
           <label className="field"><span>Vercel access token</span><input type="password" value={integrationSettings.vercelToken ?? ""} onChange={(e) => saveIntegrationSettings({ ...integrationSettings, vercelToken: e.target.value })} placeholder="Vercel token" autoComplete="off" /></label>
           <label className="field"><span>Netlify access token</span><input type="password" value={integrationSettings.netlifyToken ?? ""} onChange={(e) => saveIntegrationSettings({ ...integrationSettings, netlifyToken: e.target.value })} placeholder="Netlify token" autoComplete="off" /></label>
+          <label className="field"><span>Netlify site ID (optional; saved automatically after the first deploy)</span><input value={integrationSettings.netlifySiteId ?? ""} onChange={(e) => saveIntegrationSettings({ ...integrationSettings, netlifySiteId: e.target.value.trim() })} placeholder="Existing site's ID" autoComplete="off" /></label>
           <div className="settings-inline-actions">
             <button className="quiet-link as-button" disabled={backendBusy} onClick={() => void testDeployment("vercel")}>Test Vercel connection</button>
             <button className="quiet-link as-button" disabled={backendBusy} onClick={() => void testDeployment("netlify")}>Test Netlify connection</button>
