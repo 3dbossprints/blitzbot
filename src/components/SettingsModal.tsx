@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useStore } from "../lib/store";
 import { manualGroups } from "../lib/router";
+import { connectMcp, type McpTool } from "../lib/mcp";
+import { buildProjectAssets } from "../lib/webcontainer";
+import { deployToNetlify, deployToVercel } from "../lib/deploy";
 import type { ProviderId } from "../lib/types";
 
 function ModelStatus({ provider }: { provider: ProviderId }) {
@@ -33,17 +36,81 @@ export function SettingsModal() {
   const [localAiEnabled, setLocalAiEnabled] = useState(() => { try { return localStorage.getItem("blitzbot.browser-ai.enabled") === "true"; } catch { return false; } });
   const [localModel, setLocalModel] = useState(() => { try { return localStorage.getItem("blitzbot.browser-ai.model") || "onnx-community/Qwen2.5-Coder-1.5B-Instruct"; } catch { return "onnx-community/Qwen2.5-Coder-1.5B-Instruct"; } });
   const [backendBusy, setBackendBusy] = useState(false);
+  const [deployName, setDeployName] = useState("");
+  const [mcpStatus, setMcpStatus] = useState("");
   const [basePrompt, setBasePrompt] = useState(() => { try { return localStorage.getItem("blitzbot.base-prompt.v1") ?? ""; } catch { return ""; } });
   const [skills, setSkills] = useState<{ id: string; name: string; content: string; enabled: boolean }[]>(() => {
     try { return JSON.parse(localStorage.getItem("blitzbot.skills.v1") ?? "[]"); } catch { return []; }
   });
   const [integrationSettings, setIntegrationSettings] = useState<Record<string, string>>(() => {
-    try { return JSON.parse(localStorage.getItem("blitzbot.integrations.v1") ?? "{}"); } catch { return {}; }
+    try {
+      const stored = JSON.parse(localStorage.getItem("blitzbot.integrations.v1") ?? "{}") as Record<string, string>;
+      delete stored.mongoUri;
+      return stored;
+    } catch { return {}; }
   });
   const [settingsNotice, setSettingsNotice] = useState("");
+  const [mcpTools, setMcpTools] = useState<McpTool[]>(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem("blitzbot.integrations.v1") ?? "{}") as Record<string, string>;
+      return JSON.parse(stored.mcpTools ?? "[]") as McpTool[];
+    } catch { return []; }
+  });
   function saveIntegrationSettings(next: Record<string, string>) {
     setIntegrationSettings(next);
     try { localStorage.setItem("blitzbot.integrations.v1", JSON.stringify(next)); } catch {}
+    window.dispatchEvent(new Event("blitzbot-integrations-updated"));
+  }
+  async function connectCustomMcp() {
+    const endpoint = (integrationSettings.mcpUrl ?? "").trim();
+    const token = (integrationSettings.mcpToken ?? "").trim();
+    if (!endpoint) { setMcpStatus("Enter the MCP server HTTP endpoint first."); return; }
+    setBackendBusy(true);
+    setMcpStatus("Connecting and discovering tools…");
+    try {
+      const connected = await connectMcp(endpoint, token);
+      setMcpTools(connected.tools);
+      saveIntegrationSettings({
+        ...integrationSettings,
+        mcpUrl: endpoint,
+        mcpSessionId: connected.sessionId,
+        mcpTools: JSON.stringify(connected.tools),
+        mcpServerInfo: JSON.stringify(connected.serverInfo),
+      });
+      setMcpStatus("Connected. Found " + connected.tools.length + " tool(s).");
+    } catch (error) {
+      setMcpStatus("MCP connection failed: " + (error instanceof Error ? error.message : String(error)) + ". The endpoint must support MCP Streamable HTTP and allow browser CORS.");
+    } finally { setBackendBusy(false); }
+  }
+  async function deployCurrentProject(kind: "vercel" | "netlify") {
+    const token = (integrationSettings[kind + "Token"] ?? "").trim();
+    if (!token) { setSettingsNotice("Add your " + (kind === "vercel" ? "Vercel" : "Netlify") + " token in Deployment first."); return; }
+    if (!Object.keys(files).length) { setSettingsNotice("Create or open a project before deploying."); return; }
+    setBackendBusy(true);
+    setSettingsNotice("Building the current project…");
+    try {
+      const assets = await buildProjectAssets(files, (line) => setSettingsNotice(line.trim().slice(-240)));
+      const name = deployName.trim() || projectPrompt || "blitzbot-project";
+      const result = kind === "vercel"
+        ? await deployToVercel(assets, token, name, (line) => setSettingsNotice(line))
+        : await deployToNetlify(assets, token, name);
+      setSettingsNotice((kind === "vercel" ? "Vercel" : "Netlify") + " deployment submitted (" + (result.state ?? "status pending") + "): " + result.url);
+    } catch (error) {
+      setSettingsNotice((kind === "vercel" ? "Vercel" : "Netlify") + " deployment failed: " + (error instanceof Error ? error.message : String(error)));
+    } finally { setBackendBusy(false); }
+  }
+  async function testGitLab() {
+    const token = (integrationSettings.gitlabToken ?? "").trim();
+    if (!token) { setSettingsNotice("Enter a GitLab personal access token first."); return; }
+    setBackendBusy(true);
+    try {
+      const response = await fetch("https://gitlab.com/api/v4/user", { headers: { "PRIVATE-TOKEN": token } });
+      const data = await response.json().catch(() => ({})) as { username?: string; message?: string };
+      if (!response.ok) throw new Error(data.message || "HTTP " + response.status);
+      setSettingsNotice("GitLab connected as @" + (data.username ?? "user") + ".");
+    } catch (error) {
+      setSettingsNotice("GitLab connection failed: " + (error instanceof Error ? error.message : String(error)) + ". Check token scope and browser CORS.");
+    } finally { setBackendBusy(false); }
   }
   async function testDeployment(kind: "vercel" | "netlify") {
     const token = integrationSettings[kind + "Token"]?.trim();
