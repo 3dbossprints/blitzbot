@@ -127,15 +127,22 @@ export async function buildProjectAssets(
     if (buildCode !== 0) throw new Error("npm run build failed with exit code " + buildCode + ".");
 
     const output: Record<string, string> = {};
+    const wc = await getContainer();
     async function walk(dir: string): Promise<void> {
-      const names = await (await getContainer()).fs.readdir(dir);
+      const names = await wc.fs.readdir(dir);
       for (const name of names) {
-        const path = dir + "/" + name;
-        const stat = await (await getContainer()).fs.stat(path);
-        if (stat.isDirectory()) {
-          await walk(path);
-        } else {
-          output[path.slice("dist/".length)] = await (await getContainer()).fs.readFile(path, "utf-8");
+        const childPath = dir + "/" + name;
+        // WebContainer's FileSystemAPI does not expose fs.stat. Try readdir
+        // first; a file produces ENOTDIR, after which it is read normally.
+        try {
+          await wc.fs.readdir(childPath);
+          await walk(childPath);
+        } catch {
+          try {
+            output[childPath.slice("dist/".length)] = await wc.fs.readFile(childPath, "utf-8");
+          } catch (error) {
+            throw new Error("Could not read build output " + childPath + ": " + (error instanceof Error ? error.message : String(error)));
+          }
         }
       }
     }
