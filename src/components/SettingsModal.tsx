@@ -545,8 +545,13 @@ export function SettingsModal() {
           {settingsNotice && <p className="field-hint deployment-status">{settingsNotice}</p>}
         </section>
         <section id="settings-git" className="settings-section">
-          <h3>GitHub & GitLab</h3>
+          <h3><SettingsIcon name="git" /> GitHub & GitLab</h3>
           <p className="field-hint">GitHub repository import and publishing are available through the GitHub token and Ship to GitHub workflow. This section verifies GitLab credentials.</p>
+          <label className="field">
+            <span>GitHub personal access token (push / PRs / private imports)</span>
+            <input type="password" value={keys.github} onChange={(e) => setKeys({ github: e.target.value.trim() })} placeholder="github_pat_… or ghp_…" autoComplete="off" />
+          </label>
+          <p className="field-hint">Needs repository access. Fine-grained tokens should grant Contents read/write and Pull requests read/write only for repositories you intend to use.</p>
           <label className="field"><span>GitLab personal access token</span><input type="password" value={integrationSettings.gitlabToken ?? ""} onChange={(e) => saveIntegrationSettings({ ...integrationSettings, gitlabToken: e.target.value })} placeholder="glpat-…" autoComplete="off" /></label>
           <div className="settings-inline-actions"><button className="quiet-link as-button" disabled={backendBusy} onClick={() => void testGitLab()}>Test GitLab connection</button></div>
           <div className="settings-inline-actions"><button className="btn-primary btn-sm" disabled={backendBusy || !Object.keys(files).length} onClick={() => void publishToGitLab()}>{backendBusy ? "Working…" : "Publish current project to new private GitLab repo"}</button></div>
@@ -592,20 +597,7 @@ export function SettingsModal() {
           </label>
         </div>
 
-        <label className="field">
-          <span>GitHub personal access token (for push / PRs / private imports)</span>
-          <input
-            type="password"
-            value={keys.github}
-            onChange={(e) => setKeys({ github: e.target.value.trim() })}
-            placeholder="github_pat_… or ghp_…"
-            autoComplete="off"
-          />
-        </label>
-        <p className="field-hint">
-          Needs repo scope. Sent only to api.github.com. Fine-grained tokens: grant "Contents:
-          read/write" and "Pull requests: read/write" on the repos you'll use.
-        </p>
+
       </div>
     </div>
   );
