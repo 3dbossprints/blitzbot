@@ -1724,3 +1724,26 @@ button.chip:hover {
   gap: 16px;
   margin: 8px 0 12px;
 }
+
+.settings-section-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  position: sticky;
+  top: 48px;
+  z-index: 1;
+  padding: 10px 0;
+  background: var(--gesso);
+  border-bottom: 1px solid var(--linen);
+}
+.settings-section-nav a {
+  text-decoration: none;
+  font-size: 12px;
+  padding: 6px 10px;
+  border: 1px solid var(--linen);
+  border-radius: 999px;
+}
+.settings-section-nav a:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}
