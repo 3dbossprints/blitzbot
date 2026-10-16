@@ -15,14 +15,6 @@ function errorMessage(payload: any, fallback: string): string {
   return payload?.error?.message || payload?.message || payload?.error || fallback;
 }
 
-function toBase64(bytes: Uint8Array): string {
-  let binary = "";
-  for (let i = 0; i < bytes.length; i += 0x8000) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
-  }
-  return btoa(binary);
-}
-
 async function fetchJson(url: string, init: RequestInit): Promise<any> {
   const response = await fetch(url, init);
   const raw = response.status === 204 ? "" : await response.text();
@@ -47,8 +39,18 @@ export async function deployToNetlify(
 ): Promise<DeploymentResult> {
   if (!token.trim()) throw new Error("Enter a Netlify personal access token in Settings → Deployment.");
   if (!assets["index.html"]) throw new Error("The production build is missing index.html.");
-  // Netlify's documented ZIP endpoint accepts a site archive directly and creates the site+deploy.
-  const body = await fetchJson("https://api.netlify.com/api/v1/sites", {
+  const name = slugify(projectName);
+  const site = await fetchJson("https://api.netlify.com/api/v1/sites", {
+    method: "POST",
+    headers: {
+      Authorization: "Bearer " + token.trim(),
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({ name }),
+  });
+  if (!site.id) throw new Error("Netlify created no site ID. Check your Netlify dashboard.");
+  const deploy = await fetchJson("https://api.netlify.com/api/v1/sites/" + encodeURIComponent(site.id) + "/deploys", {
     method: "POST",
     headers: {
       Authorization: "Bearer " + token.trim(),
@@ -57,9 +59,9 @@ export async function deployToNetlify(
     },
     body: makeZip(assets),
   });
-  const url = body.ssl_url || body.deploy_ssl_url || body.url;
-  if (!url) throw new Error("Netlify accepted the request but did not return a site URL. Check your Netlify dashboard.");
-  return { provider: "netlify", url, id: body.id, state: body.state || body.processing_state };
+  const url = deploy.ssl_url || deploy.deploy_ssl_url || site.ssl_url || site.url;
+  if (!url) throw new Error("Netlify accepted the deploy but did not return a site URL. Check your Netlify dashboard.");
+  return { provider: "netlify", url, id: deploy.id || site.id, state: deploy.state || deploy.processing_state };
 }
 
 export async function deployToVercel(
@@ -83,7 +85,7 @@ export async function deployToVercel(
         const bytes = new TextEncoder().encode(source);
         const digest = new Uint8Array(await crypto.subtle.digest("SHA-1", bytes));
         const sha = Array.from(digest, (b) => b.toString(16).padStart(2, "0")).join("");
-        const url = "https://api.vercel.com/v2/files?digest=" + encodeURIComponent(sha);
+        const url = "https://api.vercel.com/v2/files";
         const response = await fetch(url, {
           method: "POST",
           headers: {
