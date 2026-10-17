@@ -1,7 +1,7 @@
 import { useStore } from "../lib/store";
 import { timeAgo } from "../lib/db";
 
-export function ProjectsDrawer() {
+export function ProjectsDrawer({ onNavigate }: { onNavigate: (page: "home" | "build" | "chat") => void }) {
   const open = useStore((s) => s.projectsOpen);
   const setOpen = useStore((s) => s.setProjectsOpen);
   const projects = useStore((s) => s.projects);
@@ -31,7 +31,7 @@ export function ProjectsDrawer() {
           <ul className="drawer-list">
             {projects.map((p) => (
               <li key={p.id} className={`drawer-row ${p.id === projectId ? "current" : ""}`}>
-                <button className="drawer-open as-button" onClick={() => void openProject(p.id)}>
+                <button className="drawer-open as-button" onClick={() => { void openProject(p.id).then(() => onNavigate(p.fileCount > 0 ? "build" : "chat")); }}>
                   <span className="drawer-title"><span className="project-site-icon" aria-hidden="true">{p.fileCount > 0 ? "◉" : "○"}</span>{p.title}</span>
                   <span className="drawer-meta">
                     {p.fileCount > 0 ? "Website · " : "Chat · "}{p.fileCount} files · {timeAgo(p.updatedAt)}
