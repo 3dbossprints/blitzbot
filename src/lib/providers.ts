@@ -227,7 +227,7 @@ function describeBrowserModelError(error: unknown): string {
 }
 
 async function streamBrowserLocal(o: StreamOpts): Promise<Usage> {
-  const modelId = o.model || "onnx-community/Qwen2.5-Coder-1.5B-Instruct";
+  const modelId = o.model || "onnx-community/Qwen2.5-Coder-0.5B-Instruct";
   if (o.signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
   if (!browserPipeline || browserPipelineId !== modelId) {
