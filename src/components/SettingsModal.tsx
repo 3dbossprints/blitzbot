@@ -50,7 +50,7 @@ export function SettingsModal() {
   const [activeSection, setActiveSection] = useState<"ai" | "databases" | "deployment" | "git" | "mcp" | "prompt" | "skills">("ai");
   const [backendStatus, setBackendStatus] = useState<string>("");
   const [localAiEnabled, setLocalAiEnabled] = useState(() => { try { return localStorage.getItem("blitzbot.browser-ai.enabled") === "true"; } catch { return false; } });
-  const [localModel, setLocalModel] = useState(() => { try { return localStorage.getItem("blitzbot.browser-ai.model") || "onnx-community/Qwen2.5-Coder-1.5B-Instruct"; } catch { return "onnx-community/Qwen2.5-Coder-1.5B-Instruct"; } });
+  const [localModel, setLocalModel] = useState(() => { try { const saved = localStorage.getItem("blitzbot.browser-ai.model"); const model = saved === "onnx-community/Qwen2.5-Coder-1.5B-Instruct" || saved === "onnx-community/Qwen2.5-Coder-3B-Instruct" ? "onnx-community/Qwen2.5-Coder-0.5B-Instruct" : saved || "onnx-community/Qwen2.5-Coder-0.5B-Instruct"; if (model !== saved) localStorage.setItem("blitzbot.browser-ai.model", model); return model; } catch { return "onnx-community/Qwen2.5-Coder-0.5B-Instruct"; } });
   const [backendBusy, setBackendBusy] = useState(false);
   const [deployName, setDeployName] = useState("");
   const [mcpStatus, setMcpStatus] = useState("");
@@ -289,7 +289,7 @@ export function SettingsModal() {
             const model = e.target.value; setLocalModel(model);
             try { localStorage.setItem("blitzbot.browser-ai.model", model); } catch {}
             if (localAiEnabled) setPref({ autoRoute: false, manualChoice: { provider: "web-local", model } });
-          }}><option value="onnx-community/Qwen2.5-Coder-1.5B-Instruct">Small · ~2B class, recommended</option><option value="onnx-community/Qwen2.5-Coder-3B-Instruct">Larger · up to ~6 GB device memory</option></select></label>
+          }}><option value="onnx-community/Qwen2.5-Coder-0.5B-Instruct">Small · best compatibility (recommended)</option><option value="onnx-community/Qwen2.5-Coder-1.5B-Instruct">Medium · needs more memory</option><option value="onnx-community/Qwen2.5-Coder-3B-Instruct">Large · needs substantial device memory</option></select></label>
           <p className="field-hint">This provider is only selected when you enable it. Turn it off to return to automatic routing. Device compatibility and memory use vary.</p>
         </section>
 
