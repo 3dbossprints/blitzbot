@@ -2229,3 +2229,187 @@ button.chip:hover {
 .app-dark .modal-backdrop:has(.modal[aria-label="Push to GitHub"]) .push-steps code {
   background: #303137;
 }
+
+
+/* Stability and contrast fixes: prevent the document background showing below
+   a short app shell, and keep message text readable in both themes. */
+html, body {
+  min-height: 100%;
+  height: auto;
+}
+#root {
+  min-height: 100vh;
+  height: auto;
+}
+.app {
+  min-height: 100vh;
+  height: auto;
+}
+.landing {
+  min-height: 100vh;
+  height: auto;
+}
+.studio {
+  height: 100vh;
+  min-height: 560px;
+}
+.app-light .msg-body,
+.app-light .msg-note {
+  color: var(--graphite);
+}
+.app-dark .msg-body {
+  color: #f5f3ee;
+}
+.app-dark .msg-note {
+  color: #f1eee8;
+}
+.app-dark .msg-note.note-error {
+  color: #ffb4a8;
+}
+.app-dark .msg-note.note-abort {
+  color: #c7c5ff;
+}
+
+/* Settings uses real destination buttons and a persistent left navigation. */
+.settings-layout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: clamp(22px, 4vw, 48px);
+  align-items: start;
+  padding-top: 8px;
+}
+.settings-section-nav {
+  position: sticky;
+  top: 76px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 5px;
+  padding: 0 14px 0 0;
+  border-bottom: 0;
+  border-right: 1px solid var(--linen);
+  background: transparent;
+}
+.settings-nav-label {
+  font: 600 10px var(--font-mono);
+  letter-spacing: .12em;
+  color: var(--ash);
+  padding: 0 10px 10px;
+}
+.settings-section-nav button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 11px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  font-size: 13px;
+}
+.settings-section-nav button:hover {
+  background: rgba(36, 48, 232, .07);
+  border-color: var(--linen);
+}
+.settings-section-nav button.active {
+  background: rgba(36, 48, 232, .1);
+  border-color: rgba(36, 48, 232, .24);
+  color: var(--ink);
+  font-weight: 600;
+}
+.settings-section-nav .settings-icon {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+.settings-content {
+  min-width: 0;
+  max-width: 1040px;
+  width: 100%;
+}
+.settings-content > .settings-section,
+.settings-content > .browser-ai-settings {
+  border-top: 0;
+  margin-top: 0;
+  padding-top: 0;
+}
+.settings-content .settings-section h3 {
+  margin-top: 4px;
+}
+.app-dark .settings-section-nav {
+  background: transparent;
+  border-right-color: #303137;
+}
+.app-dark .settings-section-nav button {
+  color: #e9e8e4;
+}
+.app-dark .settings-section-nav button:hover {
+  background: #222329;
+  border-color: #3a3b44;
+}
+.app-dark .settings-section-nav button.active {
+  background: #292a38;
+  border-color: #454765;
+  color: #c2c4ff;
+}
+.app-dark .settings-content .field-hint,
+.app-dark .settings-content .trust-note {
+  color: #b9b8c1;
+}
+.app-dark .settings-content .field-label-strong,
+.app-dark .settings-content .field > span {
+  color: #f0efec;
+}
+.app-dark .settings-content .field input,
+.app-dark .settings-content .field select,
+.app-dark .settings-content .field textarea {
+  background: #222329;
+  color: #f5f5f4;
+  border-color: #3a3b44;
+}
+.app-dark .settings-content .field input::placeholder,
+.app-dark .settings-content .field textarea::placeholder {
+  color: #9999a2;
+}
+@media (max-width: 760px) {
+  .settings-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+  .settings-section-nav {
+    position: sticky;
+    top: 54px;
+    z-index: 3;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 8px 0;
+    border-right: 0;
+    border-bottom: 1px solid var(--linen);
+    background: var(--gesso);
+  }
+  .settings-nav-label {
+    display: none;
+  }
+  .settings-section-nav button {
+    width: auto;
+    flex: 0 0 auto;
+    min-height: 36px;
+    padding: 7px 10px;
+    white-space: nowrap;
+  }
+  .settings-section-nav .settings-icon {
+    width: 16px;
+    height: 16px;
+  }
+  .app-dark .settings-section-nav {
+    background: #17181c;
+    border-bottom-color: #303137;
+  }
+  .studio {
+    min-height: 560px;
+  }
+}
