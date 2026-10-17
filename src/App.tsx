@@ -25,6 +25,6 @@ export default function App() {
   useEffect(() => { void useStore.getState().initApp(); }, []);
   return <div className={`app app-${theme}`}>
     {page === "home" ? <Landing onNavigate={navigate} theme={theme} onToggleTheme={toggleTheme} /> : page === "chat" ? <ChatPage onNavigate={navigate} theme={theme} onToggleTheme={toggleTheme} /> : <Workspace onNavigate={navigate} theme={theme} onToggleTheme={toggleTheme} />}
-    <SettingsModal /><PushModal /><ProjectsDrawer />
+    <SettingsModal /><PushModal /><ProjectsDrawer onNavigate={navigate} />
   </div>;
 }
