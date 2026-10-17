@@ -180,7 +180,20 @@ function loadPrefs(): Prefs {
   };
   try {
     const raw = localStorage.getItem(PREFS_STORAGE);
-    if (raw) return { ...base, ...JSON.parse(raw) };
+    if (raw) {
+      const prefs = { ...base, ...JSON.parse(raw) } as Prefs;
+      // Older browser-local Qwen models can require several GB of memory and fail
+      // before generation starts on ordinary laptops. Move existing local-model
+      // selections to the supported 0.5B quantized model so the feature can start.
+      if (prefs.manualChoice?.provider === "web-local" && [
+        "onnx-community/Qwen2.5-Coder-1.5B-Instruct",
+        "onnx-community/Qwen2.5-Coder-3B-Instruct",
+      ].includes(prefs.manualChoice.model)) {
+        prefs.manualChoice = { provider: "web-local", model: "onnx-community/Qwen2.5-Coder-0.5B-Instruct" };
+        localStorage.setItem(PREFS_STORAGE, JSON.stringify(prefs));
+      }
+      return prefs;
+    }
   } catch {
     /* defaults */
   }
