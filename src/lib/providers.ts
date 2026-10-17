@@ -203,41 +203,68 @@ export async function unloadBrowserLocalModel() {
   try { await current?.dispose?.(); } catch { /* already released */ }
 }
 
+function describeBrowserModelError(error: unknown): string {
+  const parts: string[] = [];
+  const seen = new Set<unknown>();
+  let current: any = error;
+  for (let depth = 0; current && depth < 4 && !seen.has(current); depth++) {
+    seen.add(current);
+    if (typeof current === "string") parts.push(current);
+    else {
+      if (current.name && current.message) parts.push(`${current.name}: ${current.message}`);
+      else if (current.message) parts.push(String(current.message));
+      else if (current.name) parts.push(String(current.name));
+      else parts.push(String(current));
+      if (current.code !== undefined) parts.push(`code=${String(current.code)}`);
+      if (current.cause && current.cause !== current) {
+        current = current.cause;
+        continue;
+      }
+    }
+    break;
+  }
+  return parts.filter(Boolean).join(" | ") || "Unknown model-loading error. Check Network requests for failed model files.";
+}
+
 async function streamBrowserLocal(o: StreamOpts): Promise<Usage> {
   const modelId = o.model || "onnx-community/Qwen2.5-Coder-1.5B-Instruct";
   if (o.signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
   if (!browserPipeline || browserPipelineId !== modelId) {
-    let pending: Promise<any>;
-    let generation: number;
-    if (browserPipelinePromise && browserPipelinePendingId === modelId) {
-      pending = browserPipelinePromise;
-      generation = browserModelGeneration;
-    } else {
-      await unloadBrowserLocalModel();
-      generation = browserModelGeneration;
-      const { pipeline, env } = await import("@huggingface/transformers");
-      env.allowLocalModels = false;
-      pending = pipeline("text-generation", modelId, { dtype: "q4" });
-      browserPipelinePromise = pending;
-      browserPipelinePendingId = modelId;
-    }
-
+    let generation = browserModelGeneration;
     try {
+      let pending: Promise<any>;
+      if (browserPipelinePromise && browserPipelinePendingId === modelId) {
+        pending = browserPipelinePromise;
+      } else {
+        await unloadBrowserLocalModel();
+        generation = browserModelGeneration;
+        browserPipelinePendingId = modelId;
+        const { pipeline, env } = await import("@huggingface/transformers");
+        env.allowLocalModels = false;
+        // Keep pipeline creation inside the try block so synchronous setup errors
+        // and failed model downloads are both surfaced to the user and log.
+        pending = Promise.resolve().then(() => pipeline("text-generation", modelId, { dtype: "q4" }));
+        browserPipelinePromise = pending;
+      }
+
       const loaded = await pending;
-      if (generation !== browserModelGeneration || browserPipelinePendingId !== modelId && browserPipelineId !== modelId) {
+      if (generation !== browserModelGeneration || (browserPipelinePendingId !== modelId && browserPipelineId !== modelId)) {
         try { await loaded.dispose?.(); } catch { /* stale model finished loading after it was disabled */ }
         throw new Error("Browser-local AI was switched off or changed while loading.");
       }
       browserPipeline = loaded;
       browserPipelineId = modelId;
+      browserPipelinePromise = null;
       browserPipelinePendingId = "";
     } catch (e) {
       if (generation === browserModelGeneration) {
         browserPipelinePromise = null;
         browserPipelinePendingId = "";
       }
-      throw new Error("Could not load the browser model. Check browser compatibility, available memory, and model download access. " + (e instanceof Error ? e.message : String(e)));
+      const detail = describeBrowserModelError(e);
+      console.error("[BlitzBot browser AI] Model load failed", { modelId, error: detail, cause: e });
+      throw new Error("Could not load the browser model. " + detail);
     }
   }
 
