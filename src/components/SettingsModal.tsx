@@ -47,6 +47,7 @@ export function SettingsModal() {
   const files = useStore((s) => s.files);
   const projectPrompt = useStore((s) => s.prompt);
   const editFile = useStore((s) => s.editFile);
+  const [activeSection, setActiveSection] = useState<"ai" | "databases" | "deployment" | "git" | "mcp" | "prompt" | "skills">("ai");
   const [backendStatus, setBackendStatus] = useState<string>("");
   const [localAiEnabled, setLocalAiEnabled] = useState(() => { try { return localStorage.getItem("blitzbot.browser-ai.enabled") === "true"; } catch { return false; } });
   const [localModel, setLocalModel] = useState(() => { try { return localStorage.getItem("blitzbot.browser-ai.model") || "onnx-community/Qwen2.5-Coder-1.5B-Instruct"; } catch { return "onnx-community/Qwen2.5-Coder-1.5B-Instruct"; } });
@@ -260,10 +261,20 @@ export function SettingsModal() {
         </div>
 
         <p className="trust-note">Configure AI, databases, deployment, Git, MCP, reusable base instructions, and uploaded skills. Browser-only credentials are stored locally; never expose server-only secrets such as Supabase service-role keys.</p>
-        <nav className="settings-section-nav" aria-label="Settings sections">
-          <a href="#settings-ai">AI</a><a href="#settings-databases">Databases</a><a href="#settings-deployment">Deployment</a><a href="#settings-git">Git</a><a href="#settings-mcp">MCP</a><a href="#settings-base-prompt">Base prompt</a><a href="#settings-skills">Skills</a>
-        </nav>
+        <div className="settings-layout">
+          <nav className="settings-section-nav" aria-label="Settings sections">
+            <span className="settings-nav-label">SETTINGS AREAS</span>
+            <button type="button" className={activeSection === "ai" ? "active" : ""} aria-current={activeSection === "ai" ? "page" : undefined} onClick={() => setActiveSection("ai")}><SettingsIcon name="cpu" /> AI &amp; models</button>
+            <button type="button" className={activeSection === "databases" ? "active" : ""} aria-current={activeSection === "databases" ? "page" : undefined} onClick={() => setActiveSection("databases")}><SettingsIcon name="database" /> Databases</button>
+            <button type="button" className={activeSection === "deployment" ? "active" : ""} aria-current={activeSection === "deployment" ? "page" : undefined} onClick={() => setActiveSection("deployment")}><SettingsIcon name="deploy" /> Deployment</button>
+            <button type="button" className={activeSection === "git" ? "active" : ""} aria-current={activeSection === "git" ? "page" : undefined} onClick={() => setActiveSection("git")}><SettingsIcon name="git" /> GitHub &amp; GitLab</button>
+            <button type="button" className={activeSection === "mcp" ? "active" : ""} aria-current={activeSection === "mcp" ? "page" : undefined} onClick={() => setActiveSection("mcp")}><SettingsIcon name="mcp" /> Custom MCP</button>
+            <button type="button" className={activeSection === "prompt" ? "active" : ""} aria-current={activeSection === "prompt" ? "page" : undefined} onClick={() => setActiveSection("prompt")}><SettingsIcon name="prompt" /> Base prompt</button>
+            <button type="button" className={activeSection === "skills" ? "active" : ""} aria-current={activeSection === "skills" ? "page" : undefined} onClick={() => setActiveSection("skills")}><SettingsIcon name="skills" /> Skills</button>
+          </nav>
+          <div className="settings-content">
         {error && <p className="modal-error">{error}</p>}
+        {activeSection === "ai" && <>
         <section id="settings-ai" className="browser-ai-settings settings-section"><h3><SettingsIcon name="cpu" /> Browser-local AI</h3>
           <div className="field-row"><span className="field-label-strong">Browser-local coding AI (optional)</span></div>
           <p className="field-hint">Runs in this browser with no personal API key. Model weights download only when first enabled and used. First load may take a while and needs storage and available memory.</p>
@@ -500,8 +511,15 @@ export function SettingsModal() {
         </p>
         
         </section>
+        <div className="field-row settings-readme-option">
+          <label className="check">
+            <input type="checkbox" checked={autoReadme} onChange={(e) => setPref({ autoReadme: e.target.checked })} />
+            <span>Write a README.md after each build</span>
+          </label>
+        </div>
+        </>}
 
-        <section id="settings-databases" className="settings-section">
+        {activeSection === "databases" && <section id="settings-databases" className="settings-section">
           <h3><SettingsIcon name="database" /> Databases & backends</h3>
         <p className="field-hint">These settings are saved in this browser. They configure generated projects; they do not connect BlitzBot's own project history to a remote database. Only use public client credentials here.</p>
         <label className="field">
@@ -532,9 +550,9 @@ export function SettingsModal() {
         <label className="field"><span>Custom database API / secure proxy URL</span><input value={integrationSettings.databaseApiUrl ?? ""} onChange={(e) => saveIntegrationSettings({ ...integrationSettings, databaseApiUrl: e.target.value })} placeholder="https://your-api.example.com" /></label>
         <label className="field"><span>Optional user-scoped API bearer token</span><input type="password" value={integrationSettings.databaseApiToken ?? ""} onChange={(e) => saveIntegrationSettings({ ...integrationSettings, databaseApiToken: e.target.value })} placeholder="User/session access token only" autoComplete="off" /></label>
         <p className="field-hint">Use your own authenticated API or serverless functions for privileged writes. Keep Supabase service-role keys, MongoDB URIs, Appwrite server API keys and other admin credentials in that server's environment-secret store, never in BlitzBot or generated client code. Provide a GET /health endpoint to test the connection.</p>
-        </section>
+        </section>}
 
-<section id="settings-deployment" className="settings-section">
+        {activeSection === "deployment" && <section id="settings-deployment" className="settings-section">
           <h3><SettingsIcon name="deploy" /> Deployment</h3>
           <p className="field-hint">Builds the current generated project in your browser and uploads the production assets. Review the host's dashboard after the upload. Tokens are stored locally in this browser.</p>
           <label className="field"><span>Project / site name (optional)</span><input value={deployName} onChange={(e) => setDeployName(e.target.value)} placeholder="Use the project prompt by default" /></label>
@@ -550,8 +568,8 @@ export function SettingsModal() {
             <button className="btn-primary btn-sm" disabled={backendBusy || !Object.keys(files).length} onClick={() => void deployCurrentProject("netlify")}>{backendBusy ? "Working…" : "Build & deploy to Netlify"}</button>
           </div>
           {settingsNotice && <p className="field-hint deployment-status">{settingsNotice}</p>}
-        </section>
-        <section id="settings-git" className="settings-section">
+        </section>}
+        {activeSection === "git" && <section id="settings-git" className="settings-section">
           <h3><SettingsIcon name="git" /> GitHub & GitLab</h3>
           <p className="field-hint">GitHub repository import and publishing are available through the GitHub token and Ship to GitHub workflow. This section verifies GitLab credentials.</p>
           <label className="field">
@@ -563,8 +581,8 @@ export function SettingsModal() {
           <div className="settings-inline-actions"><button className="quiet-link as-button" disabled={backendBusy} onClick={() => void testGitLab()}>Test GitLab connection</button></div>
           <div className="settings-inline-actions"><button className="btn-primary btn-sm" disabled={backendBusy || !Object.keys(files).length} onClick={() => void publishToGitLab()}>{backendBusy ? "Working…" : "Publish current project to new private GitLab repo"}</button></div>
           {settingsNotice && <p className="field-hint">{settingsNotice}</p>}
-        </section>
-        <section id="settings-mcp" className="settings-section">
+        </section>}
+        {activeSection === "mcp" && <section id="settings-mcp" className="settings-section">
           <h3><SettingsIcon name="mcp" /> Custom MCP</h3>
           <p className="field-hint">Connect an MCP Streamable HTTP endpoint that permits browser CORS. Only connect servers you trust; tools can read or change external data.</p>
           <label className="field"><span>MCP server endpoint</span><input value={integrationSettings.mcpUrl ?? ""} onChange={(e) => saveIntegrationSettings({ ...integrationSettings, mcpUrl: e.target.value })} placeholder="https://your-mcp-server.example.com/mcp" /></label>
@@ -575,13 +593,13 @@ export function SettingsModal() {
           </div>
           {mcpStatus && <p className="field-hint">{mcpStatus}</p>}
           {mcpTools.length > 0 && <ul className="mcp-tool-list">{mcpTools.map((tool) => <li key={tool.name}><strong>{tool.name}</strong>{tool.description ? <span> — {tool.description}</span> : null}</li>)}</ul>}
-        </section>
-        <section id="settings-base-prompt" className="settings-section">
+        </section>}
+        {activeSection === "prompt" && <section id="settings-base-prompt" className="settings-section">
           <h3><SettingsIcon name="prompt" /> Base prompt</h3>
           <p className="field-hint">Persistent instructions appended to the built-in prompt for future coding and ideation requests.</p>
           <label className="field"><span>Your instructions</span><textarea rows={6} value={basePrompt} onChange={(e) => { setBasePrompt(e.target.value); try { localStorage.setItem("blitzbot.base-prompt.v1", e.target.value); } catch {} }} placeholder="Prefer accessible React components, TypeScript, and minimal dependencies…" /></label>
-        </section>
-        <section id="settings-skills" className="settings-section">
+        </section>}
+        {activeSection === "skills" && <section id="settings-skills" className="settings-section">
           <h3><SettingsIcon name="skills" /> Skills</h3>
           <p className="field-hint">Upload .md, .txt, or .json instructions (under 100 KB each). Enabled skills are included in future model context and stored in this browser.</p>
           <label className="field"><span>Upload skill files</span><input type="file" accept=".md,.txt,.json,text/plain,text/markdown,application/json" multiple onChange={(e) => { void importSkills(e.target.files); e.currentTarget.value = ""; }} /></label>
@@ -590,21 +608,10 @@ export function SettingsModal() {
             <button className="quiet-link as-button" onClick={() => setSkills((current) => { const next = current.filter((s) => s.id !== skill.id); try { localStorage.setItem("blitzbot.skills.v1", JSON.stringify(next)); } catch {} return next; })}>Remove</button>
           </div>)}
           {settingsNotice && <p className="field-hint">{settingsNotice}</p>}
-        </section>
+        </section>}
 
-
-        <div className="field-row">
-          <label className="check">
-            <input
-              type="checkbox"
-              checked={autoReadme}
-              onChange={(e) => setPref({ autoReadme: e.target.checked })}
-            />
-            <span>Write a README.md after each build</span>
-          </label>
+          </div>
         </div>
-
-
       </div>
     </div>
   );
