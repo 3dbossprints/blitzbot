@@ -11,6 +11,7 @@ let loading: Promise<any> | null = null;
 
 // A single WASM thread reduces memory pressure on laptops and avoids creating
 // a large worker pool just to initialise the small browser-local model.
+env.backends.onnx.wasm ??= {};
 env.backends.onnx.wasm.numThreads = 1;
 
 self.onmessage = async (event: MessageEvent<RequestMessage>) => {
