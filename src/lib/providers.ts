@@ -186,21 +186,65 @@ export function hasAnyKey(keys: Keys): boolean {
 }
 
 
-let browserPipeline: any = null;
-let browserPipelineId = "";
-let browserPipelinePromise: Promise<any> | null = null;
-let browserPipelinePendingId = "";
-let browserModelGeneration = 0;
 
-/** Release browser model resources when the user turns the feature off. */
+let browserWorker: Worker | null = null;
+let browserWorkerRequestId = 0;
+
+type WorkerResponse = {
+  id: number;
+  type: "progress" | "ready" | "text" | "done" | "error";
+  progress?: BrowserModelProgress;
+  modelId?: string;
+  chunk?: string;
+  outputTokensText?: string;
+  error?: string;
+};
+
+function getBrowserWorker(): Worker {
+  if (!browserWorker) {
+    browserWorker = new Worker(new URL("./browserModel.worker.ts", import.meta.url), { type: "module" });
+  }
+  return browserWorker;
+}
+
+function workerRequest(
+  message: Record<string, unknown>,
+  callbacks: { onProgress?: (progress: BrowserModelProgress) => void; onText?: (chunk: string) => void; signal?: AbortSignal } = {},
+): Promise<string> {
+  if (callbacks.signal?.aborted) return Promise.reject(new DOMException("Aborted", "AbortError"));
+  const worker = getBrowserWorker();
+  const id = ++browserWorkerRequestId;
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const cleanup = () => {
+      worker.removeEventListener("message", onMessage);
+      callbacks.signal?.removeEventListener("abort", onAbort);
+    };
+    const finish = (fn: () => void) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      fn();
+    };
+    const onAbort = () => finish(() => reject(new DOMException("Aborted", "AbortError")));
+    const onMessage = (event: MessageEvent<WorkerResponse>) => {
+      const data = event.data;
+      if (data.id !== id) return;
+      if (data.type === "progress" && data.progress) callbacks.onProgress?.(data.progress);
+      else if (data.type === "text" && data.chunk) callbacks.onText?.(data.chunk);
+      else if (data.type === "error") finish(() => reject(new Error(data.error || "Browser model worker failed.")));
+      else if (data.type === "done") finish(() => resolve(data.outputTokensText ?? ""));
+    };
+    worker.addEventListener("message", onMessage);
+    callbacks.signal?.addEventListener("abort", onAbort, { once: true });
+    worker.postMessage({ ...message, id });
+  });
+}
+
+/** Release browser model resources by terminating its dedicated worker. */
 export async function unloadBrowserLocalModel() {
-  browserModelGeneration++;
-  const current = browserPipeline;
-  browserPipeline = null;
-  browserPipelineId = "";
-  browserPipelinePromise = null;
-  browserPipelinePendingId = "";
-  try { await current?.dispose?.(); } catch { /* already released */ }
+  browserWorker?.terminate();
+  browserWorker = null;
 }
 
 function describeBrowserModelError(error: unknown): string {
@@ -213,24 +257,21 @@ function describeBrowserModelError(error: unknown): string {
       parts.push(String(current));
       break;
     }
-    if (current.name && current.message) parts.push(`${current.name}: ${current.message}`);
+    if (current.name && current.message) parts.push(String(current.name) + ": " + String(current.message));
     else if (current.message) parts.push(String(current.message));
     else if (current.name) parts.push(String(current.name));
-    else if (current.code !== undefined) parts.push(`Runtime error code ${String(current.code)}`);
+    else if (current.code !== undefined) parts.push("Runtime error code " + String(current.code));
     else {
       try { parts.push(JSON.stringify(current)); } catch { parts.push(String(current)); }
     }
-    if (current.code !== undefined && current.message) parts.push(`code=${String(current.code)}`);
-    if (current.cause !== undefined && current.cause !== current) {
-      current = current.cause;
-      continue;
-    }
+    if (current.code !== undefined && current.message) parts.push("code=" + String(current.code));
+    if (current.cause !== undefined && current.cause !== current) { current = current.cause; continue; }
     break;
   }
   const detail = parts.filter(Boolean).join(" | ");
   if (!detail) return "Unknown model-loading error. Check model-file download access and browser compatibility.";
   if (/^\\d+$/.test(detail)) {
-    return `The browser AI runtime returned numeric error code ${detail}. This does not identify the cause by itself; model loading may have failed during download, WebAssembly/ONNX initialisation, or due to browser memory limits. Check that model files can be downloaded and try a current desktop Chrome/Edge browser with other heavy tabs closed.`;
+    return "The browser AI runtime returned numeric error code " + detail + ". Model loading may have failed during download, WebAssembly/ONNX initialisation, or due to browser memory limits.";
   }
   return detail;
 }
@@ -241,41 +282,10 @@ export async function prepareBrowserLocalModel(
   modelId: string,
   onProgress?: (progress: BrowserModelProgress) => void,
 ): Promise<void> {
-  if (browserPipeline && browserPipelineId === modelId) {
-    onProgress?.({ status: "ready", progress: 100 });
-    return;
-  }
-  if (browserPipelinePromise && browserPipelinePendingId === modelId) {
-    await browserPipelinePromise;
-    onProgress?.({ status: "ready", progress: 100 });
-    return;
-  }
-  await unloadBrowserLocalModel();
-  const generation = browserModelGeneration;
-  browserPipelinePendingId = modelId;
   try {
-    const { pipeline, env } = await import("@huggingface/transformers");
-    env.allowLocalModels = false;
-    const pending = Promise.resolve().then(() => pipeline("text-generation", modelId, {
-      dtype: "q4",
-      progress_callback: (event: BrowserModelProgress) => onProgress?.(event),
-    }));
-    browserPipelinePromise = pending;
-    const loaded = await pending;
-    if (generation !== browserModelGeneration || browserPipelinePendingId !== modelId) {
-      try { await loaded.dispose?.(); } catch { /* stale model */ }
-      throw new Error("Browser-local AI was switched off or changed while downloading.");
-    }
-    browserPipeline = loaded;
-    browserPipelineId = modelId;
-    browserPipelinePromise = null;
-    browserPipelinePendingId = "";
+    await workerRequest({ type: "load", modelId }, { onProgress });
     onProgress?.({ status: "ready", progress: 100 });
   } catch (error) {
-    if (generation === browserModelGeneration) {
-      browserPipelinePromise = null;
-      browserPipelinePendingId = "";
-    }
     const detail = describeBrowserModelError(error);
     console.error("[BlitzBot browser AI] Model download/load failed", { modelId, error: detail, cause: error });
     throw new Error(detail);
@@ -283,51 +293,23 @@ export async function prepareBrowserLocalModel(
 }
 
 async function streamBrowserLocal(o: StreamOpts): Promise<Usage> {
-  const modelId = o.model || "onnx-community/Qwen2.5-Coder-1.5B-Instruct";
+  const modelId = o.model || "onnx-community/Qwen2.5-Coder-0.5B-Instruct";
   if (o.signal?.aborted) throw new DOMException("Aborted", "AbortError");
-
-  if (!browserPipeline || browserPipelineId !== modelId) {
-    try {
-      await prepareBrowserLocalModel(modelId);
-    } catch (e) {
-      throw new Error("Could not load the browser model. " + describeBrowserModelError(e));
-    }
-  }
-
-  if (!browserPipeline || browserPipelineId !== modelId) {
-    throw new Error("Browser-local AI is not active. Enable it in Settings and try again.");
-  }
-
-  const { TextStreamer } = await import("@huggingface/transformers");
-  const messages = [{ role: "system", content: o.system }, ...o.messages];
   let full = "";
-  const streamer = new TextStreamer(browserPipeline.tokenizer, {
-    skip_prompt: true,
-    skip_special_tokens: true,
-    callback_function: (chunk: string) => {
-      if (o.signal?.aborted || !chunk) return;
-      full += chunk;
-      o.onText(chunk);
-    },
-  });
-  // Keep browser-local generation bounded: long synchronous WASM inference can make the tab appear hung.
-  // Users can request longer output in a follow-up message when needed.
+  // Keep inference off the UI thread so local model execution cannot freeze the chat interface.
   const maxTokens = modelId.includes("3B") ? 512 : 256;
-  const result = await browserPipeline(messages, {
-    max_new_tokens: maxTokens,
-    do_sample: false,
-    streamer,
-  });
-  if (o.signal?.aborted) throw new DOMException("Aborted", "AbortError");
-  if (!full) {
-    const generated = result?.[0]?.generated_text;
-    if (typeof generated === "string") full = generated;
-    else if (Array.isArray(generated)) {
-      const last = generated[generated.length - 1];
-      if (typeof last?.content === "string") full = last.content;
-    }
-    if (full) o.onText(full);
+  try {
+    full = await workerRequest({
+      type: "generate", modelId, system: o.system, messages: o.messages, maxTokens,
+    }, {
+      signal: o.signal,
+      onText: (chunk) => { if (!o.signal?.aborted && chunk) o.onText(chunk); },
+    });
+  } catch (error) {
+    if (o.signal?.aborted) throw new DOMException("Aborted", "AbortError");
+    throw new Error("Browser-local AI failed: " + describeBrowserModelError(error));
   }
+  if (o.signal?.aborted) throw new DOMException("Aborted", "AbortError");
   return {
     inputTokens: estimateTokens(o.system + o.messages.map((m) => m.content).join("\n")),
     outputTokens: estimateTokens(full),
