@@ -40,7 +40,11 @@ self.onmessage = async (event: MessageEvent<RequestMessage>) => {
           // leaves too little headroom for WASM session creation. q4f16 is
           // substantially smaller (~1.34 GB) and is the safer browser asset.
           // Keep q4 for the 0.5B model; use q4f16 for larger selections.
-          dtype: modelId.includes("0.5B") ? "q4" : "q4f16",
+          // The 3B model still exceeds the reliable WASM session memory budget
+          // on many browsers even with q4f16. Use the smaller q4f16 asset for
+          // 1.5B and q4 for 3B only when it is available; the UI will surface
+          // a clear compatibility error if ONNX cannot allocate the session.
+          dtype: modelId.includes("0.5B") || modelId.includes("3B") ? "q4" : "q4f16",
           progress_callback: (progress: any) => (self as any).postMessage({ id: message.id, type: "progress", progress }),
         });
       }
