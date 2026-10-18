@@ -32,6 +32,10 @@ self.onmessage = async (event: MessageEvent<RequestMessage>) => {
       if (!loading) {
         env.allowLocalModels = false;
         loading = pipeline("text-generation", modelId, {
+          // Run on ONNX Runtime WebAssembly rather than auto-selecting WebGPU.
+          // The WebGPU/JSEP session was aborting while creating sessions for
+          // the 1.5B and 3B models on supported browsers. q4 keeps weights small.
+          device: "wasm",
           dtype: "q4",
           progress_callback: (progress: any) => (self as any).postMessage({ id: message.id, type: "progress", progress }),
         });
