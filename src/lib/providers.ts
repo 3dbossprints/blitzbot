@@ -203,6 +203,29 @@ export async function unloadBrowserLocalModel() {
   try { await current?.dispose?.(); } catch { /* already released */ }
 }
 
+function describeBrowserModelError(error: unknown): string {
+  const parts: string[] = [];
+  const seen = new Set<unknown>();
+  let current: any = error;
+  for (let depth = 0; current && depth < 4 && !seen.has(current); depth++) {
+    seen.add(current);
+    if (typeof current === "string") parts.push(current);
+    else {
+      if (current.name && current.message) parts.push(`${current.name}: ${current.message}`);
+      else if (current.message) parts.push(String(current.message));
+      else if (current.name) parts.push(String(current.name));
+      else parts.push(String(current));
+      if (current.code !== undefined) parts.push(`code=${String(current.code)}`);
+      if (current.cause && current.cause !== current) {
+        current = current.cause;
+        continue;
+      }
+    }
+    break;
+  }
+  return parts.filter(Boolean).join(" | ") || "Unknown model-loading error. Check Network requests for failed model files.";
+}
+
 export type BrowserModelProgress = { status?: string; file?: string; progress?: number; loaded?: number; total?: number };
 
 export async function prepareBrowserLocalModel(
@@ -218,7 +241,6 @@ export async function prepareBrowserLocalModel(
     onProgress?.({ status: "ready", progress: 100 });
     return;
   }
-
   await unloadBrowserLocalModel();
   const generation = browserModelGeneration;
   browserPipelinePendingId = modelId;
@@ -245,45 +267,59 @@ export async function prepareBrowserLocalModel(
       browserPipelinePromise = null;
       browserPipelinePendingId = "";
     }
-    console.error("[BlitzBot browser AI] Model download/load failed", {
-      modelId, error: describeBrowserModelError(error), cause: error,
-    });
-    throw new Error(describeBrowserModelError(error));
+    const detail = describeBrowserModelError(error);
+    console.error("[BlitzBot browser AI] Model download/load failed", { modelId, error: detail, cause: error });
+    throw new Error(detail);
   }
-}
-
-function describeBrowserModelError(error: unknown): string {
-  const parts: string[] = [];
-  const seen = new Set<unknown>();
-  let current: any = error;
-  for (let depth = 0; current && depth < 4 && !seen.has(current); depth++) {
-    seen.add(current);
-    if (typeof current === "string") parts.push(current);
-    else {
-      if (current.name && current.message) parts.push(`${current.name}: ${current.message}`);
-      else if (current.message) parts.push(String(current.message));
-      else if (current.name) parts.push(String(current.name));
-      else parts.push(String(current));
-      if (current.code !== undefined) parts.push(`code=${String(current.code)}`);
-      if (current.cause && current.cause !== current) {
-        current = current.cause;
-        continue;
-      }
-    }
-    break;
-  }
-  return parts.filter(Boolean).join(" | ") || "Unknown model-loading error. Check Network requests for failed model files.";
 }
 
 async function streamBrowserLocal(o: StreamOpts): Promise<Usage> {
-  const modelId = o.model || "onnx-community/Qwen2.5-Coder-0.5B-Instruct";
+  const modelId = o.model || "onnx-community/Qwen2.5-Coder-1.5B-Instruct";
   if (o.signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
   if (!browserPipeline || browserPipelineId !== modelId) {
     try {
       await prepareBrowserLocalModel(modelId);
     } catch (e) {
-      const detail = describeBrowserModelError(e);
-      throw new Error("Could not load the browser model. " + detail);
+      throw new Error("Could not load the browser model. " + describeBrowserModelError(e));
     }
   }
+
+  if (!browserPipeline || browserPipelineId !== modelId) {
+    throw new Error("Browser-local AI is not active. Enable it in Settings and try again.");
+  }
+
+  const { TextStreamer } = await import("@huggingface/transformers");
+  const messages = [{ role: "system", content: o.system }, ...o.messages];
+  let full = "";
+  const streamer = new TextStreamer(browserPipeline.tokenizer, {
+    skip_prompt: true,
+    skip_special_tokens: true,
+    callback_function: (chunk: string) => {
+      if (o.signal?.aborted || !chunk) return;
+      full += chunk;
+      o.onText(chunk);
+    },
+  });
+  const maxTokens = modelId.includes("3B") ? 3072 : 2048;
+  const result = await browserPipeline(messages, {
+    max_new_tokens: maxTokens,
+    do_sample: false,
+    streamer,
+  });
+  if (o.signal?.aborted) throw new DOMException("Aborted", "AbortError");
+  if (!full) {
+    const generated = result?.[0]?.generated_text;
+    if (typeof generated === "string") full = generated;
+    else if (Array.isArray(generated)) {
+      const last = generated[generated.length - 1];
+      if (typeof last?.content === "string") full = last.content;
+    }
+    if (full) o.onText(full);
+  }
+  return {
+    inputTokens: estimateTokens(o.system + o.messages.map((m) => m.content).join("\n")),
+    outputTokens: estimateTokens(full),
+    estimated: true,
+  };
+}
