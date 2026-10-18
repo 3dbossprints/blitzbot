@@ -9,6 +9,10 @@ let currentModelId = "";
 let currentPipeline: any = null;
 let loading: Promise<any> | null = null;
 
+// A single WASM thread reduces memory pressure on laptops and avoids creating
+// a large worker pool just to initialise the small browser-local model.
+env.backends.onnx.wasm.numThreads = 1;
+
 self.onmessage = async (event: MessageEvent<RequestMessage>) => {
   const message = event.data;
   try {
@@ -30,10 +34,16 @@ self.onmessage = async (event: MessageEvent<RequestMessage>) => {
           progress_callback: (progress: any) => (self as any).postMessage({ id: message.id, type: "progress", progress }),
         });
       }
-      currentPipeline = await loading;
-      currentModelId = modelId;
-      loading = null;
-      (self as any).postMessage({ id: message.id, type: "ready", modelId });
+      // Always clear a failed load promise. Otherwise every retry in this
+      // worker immediately rethrows the same rejection until the page reloads.
+      const pendingLoad = loading;
+      try {
+        currentPipeline = await pendingLoad;
+        currentModelId = modelId;
+        (self as any).postMessage({ id: message.id, type: "ready", modelId });
+      } finally {
+        if (loading === pendingLoad) loading = null;
+      }
     }
 
     if (message.type === "load") {
