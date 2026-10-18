@@ -2413,3 +2413,31 @@ html, body {
     min-height: 560px;
   }
 }
+
+
+/* Browser-local model download progress */
+.browser-model-download {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+}
+.browser-model-download .primary-button {
+  justify-self: start;
+  border: 1px solid var(--line, #d8d5ce);
+  border-radius: 8px;
+  padding: 9px 13px;
+  background: var(--surface, #f5f3ee);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.browser-model-download .primary-button:disabled {
+  cursor: wait;
+  opacity: .7;
+}
+.browser-model-progress {
+  display: block;
+  width: min(100%, 420px);
+  height: 8px;
+  accent-color: var(--accent, #6667d8);
+}
