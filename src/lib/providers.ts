@@ -310,7 +310,9 @@ async function streamBrowserLocal(o: StreamOpts): Promise<Usage> {
       o.onText(chunk);
     },
   });
-  const maxTokens = modelId.includes("3B") ? 3072 : 2048;
+  // Keep browser-local generation bounded: long synchronous WASM inference can make the tab appear hung.
+  // Users can request longer output in a follow-up message when needed.
+  const maxTokens = modelId.includes("3B") ? 512 : 256;
   const result = await browserPipeline(messages, {
     max_new_tokens: maxTokens,
     do_sample: false,
