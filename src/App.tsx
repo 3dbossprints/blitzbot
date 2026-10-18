@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useStore } from "./lib/store";
 import { Landing } from "./components/Landing";
-import { Workspace } from "./components/Workspace";
+const Workspace = lazy(() => import("./components/Workspace").then((module) => ({ default: module.Workspace })));
 import { ChatPage } from "./components/ChatPage";
 import { SettingsModal } from "./components/SettingsModal";
 import { PushModal } from "./components/PushModal";
@@ -24,7 +24,7 @@ export default function App() {
   });
   useEffect(() => { void useStore.getState().initApp(); }, []);
   return <div className={`app app-${theme}`}>
-    {page === "home" ? <Landing onNavigate={navigate} theme={theme} onToggleTheme={toggleTheme} /> : page === "chat" ? <ChatPage onNavigate={navigate} theme={theme} onToggleTheme={toggleTheme} /> : <Workspace onNavigate={navigate} theme={theme} onToggleTheme={toggleTheme} />}
+    {page === "home" ? <Landing onNavigate={navigate} theme={theme} onToggleTheme={toggleTheme} /> : page === "chat" ? <ChatPage onNavigate={navigate} theme={theme} onToggleTheme={toggleTheme} /> : <Suspense fallback={<div className="app-loading" role="status">Opening builder…</div>}><Workspace onNavigate={navigate} theme={theme} onToggleTheme={toggleTheme} /></Suspense>}
     <SettingsModal /><PushModal /><ProjectsDrawer onNavigate={navigate} />
   </div>;
 }
