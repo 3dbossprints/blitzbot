@@ -50,7 +50,7 @@ export function SettingsModal() {
   const [activeSection, setActiveSection] = useState<"ai" | "databases" | "deployment" | "git" | "mcp" | "prompt" | "skills">("ai");
   const [backendStatus, setBackendStatus] = useState<string>("");
   const [localAiEnabled, setLocalAiEnabled] = useState(() => { try { return localStorage.getItem("blitzbot.browser-ai.enabled") === "true"; } catch { return false; } });
-  const [localModel, setLocalModel] = useState(() => { try { const saved = localStorage.getItem("blitzbot.browser-ai.model"); const model = saved === "onnx-community/Qwen2.5-Coder-1.5B-Instruct" || saved === "onnx-community/Qwen2.5-Coder-3B-Instruct" ? "onnx-community/Qwen2.5-Coder-0.5B-Instruct" : saved || "onnx-community/Qwen2.5-Coder-0.5B-Instruct"; if (model !== saved) localStorage.setItem("blitzbot.browser-ai.model", model); return model; } catch { return "onnx-community/Qwen2.5-Coder-0.5B-Instruct"; } });
+  const [localModel, setLocalModel] = useState(() => { try { const saved = localStorage.getItem("blitzbot.browser-ai.model"); const allowed = ["onnx-community/Qwen2.5-Coder-0.5B-Instruct", "onnx-community/Qwen2.5-Coder-1.5B-Instruct", "onnx-community/Qwen2.5-Coder-3B-Instruct"]; const model = saved && allowed.includes(saved) ? saved : "onnx-community/Qwen2.5-Coder-0.5B-Instruct"; if (model !== saved) localStorage.setItem("blitzbot.browser-ai.model", model); return model; } catch { return "onnx-community/Qwen2.5-Coder-0.5B-Instruct"; } });
   const [browserDownloadStatus, setBrowserDownloadStatus] = useState("");
   const [browserDownloadProgress, setBrowserDownloadProgress] = useState(0);
   const [browserDownloadBusy, setBrowserDownloadBusy] = useState(false);
