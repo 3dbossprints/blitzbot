@@ -207,23 +207,32 @@ function describeBrowserModelError(error: unknown): string {
   const parts: string[] = [];
   const seen = new Set<unknown>();
   let current: any = error;
-  for (let depth = 0; current && depth < 4 && !seen.has(current); depth++) {
-    seen.add(current);
-    if (typeof current === "string") parts.push(current);
+  for (let depth = 0; current !== undefined && current !== null && depth < 4 && !seen.has(current); depth++) {
+    if (typeof current === "object" || typeof current === "function") seen.add(current);
+    if (typeof current === "string" || typeof current === "number" || typeof current === "bigint") {
+      parts.push(String(current));
+      break;
+    }
+    if (current.name && current.message) parts.push(`${current.name}: ${current.message}`);
+    else if (current.message) parts.push(String(current.message));
+    else if (current.name) parts.push(String(current.name));
+    else if (current.code !== undefined) parts.push(`Runtime error code ${String(current.code)}`);
     else {
-      if (current.name && current.message) parts.push(`${current.name}: ${current.message}`);
-      else if (current.message) parts.push(String(current.message));
-      else if (current.name) parts.push(String(current.name));
-      else parts.push(String(current));
-      if (current.code !== undefined) parts.push(`code=${String(current.code)}`);
-      if (current.cause && current.cause !== current) {
-        current = current.cause;
-        continue;
-      }
+      try { parts.push(JSON.stringify(current)); } catch { parts.push(String(current)); }
+    }
+    if (current.code !== undefined && current.message) parts.push(`code=${String(current.code)}`);
+    if (current.cause !== undefined && current.cause !== current) {
+      current = current.cause;
+      continue;
     }
     break;
   }
-  return parts.filter(Boolean).join(" | ") || "Unknown model-loading error. Check Network requests for failed model files.";
+  const detail = parts.filter(Boolean).join(" | ");
+  if (!detail) return "Unknown model-loading error. Check model-file download access and browser compatibility.";
+  if (/^\\d+$/.test(detail)) {
+    return `The browser AI runtime returned numeric error code ${detail}. This does not identify the cause by itself; model loading may have failed during download, WebAssembly/ONNX initialisation, or due to browser memory limits. Check that model files can be downloaded and try a current desktop Chrome/Edge browser with other heavy tabs closed.`;
+  }
+  return detail;
 }
 
 export type BrowserModelProgress = { status?: string; file?: string; progress?: number; loaded?: number; total?: number };
