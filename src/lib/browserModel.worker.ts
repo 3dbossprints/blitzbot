@@ -36,7 +36,11 @@ self.onmessage = async (event: MessageEvent<RequestMessage>) => {
           // The WebGPU/JSEP session was aborting while creating sessions for
           // the 1.5B and 3B models on supported browsers. q4 keeps weights small.
           device: "wasm",
-          dtype: "q4",
+          // The q4 ONNX asset for Qwen2.5-Coder-1.5B is ~1.92 GB and
+          // leaves too little headroom for WASM session creation. q4f16 is
+          // substantially smaller (~1.34 GB) and is the safer browser asset.
+          // Keep q4 for the 0.5B model; use q4f16 for larger selections.
+          dtype: modelId.includes("0.5B") ? "q4" : "q4f16",
           progress_callback: (progress: any) => (self as any).postMessage({ id: message.id, type: "progress", progress }),
         });
       }
