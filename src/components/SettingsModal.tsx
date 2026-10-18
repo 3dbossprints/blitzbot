@@ -51,6 +51,9 @@ export function SettingsModal() {
   const [backendStatus, setBackendStatus] = useState<string>("");
   const [localAiEnabled, setLocalAiEnabled] = useState(() => { try { return localStorage.getItem("blitzbot.browser-ai.enabled") === "true"; } catch { return false; } });
   const [localModel, setLocalModel] = useState(() => { try { const saved = localStorage.getItem("blitzbot.browser-ai.model"); const model = saved === "onnx-community/Qwen2.5-Coder-1.5B-Instruct" || saved === "onnx-community/Qwen2.5-Coder-3B-Instruct" ? "onnx-community/Qwen2.5-Coder-0.5B-Instruct" : saved || "onnx-community/Qwen2.5-Coder-0.5B-Instruct"; if (model !== saved) localStorage.setItem("blitzbot.browser-ai.model", model); return model; } catch { return "onnx-community/Qwen2.5-Coder-0.5B-Instruct"; } });
+  const [browserDownloadStatus, setBrowserDownloadStatus] = useState("");
+  const [browserDownloadProgress, setBrowserDownloadProgress] = useState(0);
+  const [browserDownloadBusy, setBrowserDownloadBusy] = useState(false);
   const [backendBusy, setBackendBusy] = useState(false);
   const [deployName, setDeployName] = useState("");
   const [mcpStatus, setMcpStatus] = useState("");
@@ -77,6 +80,31 @@ export function SettingsModal() {
     try { localStorage.setItem("blitzbot.integrations.v1", JSON.stringify(next)); } catch {}
     window.dispatchEvent(new Event("blitzbot-integrations-updated"));
   }
+  async function downloadBrowserModel() {
+    setBrowserDownloadBusy(true);
+    setBrowserDownloadProgress(0);
+    setBrowserDownloadStatus("Preparing browser model download…");
+    try {
+      const { prepareBrowserLocalModel } = await import("../lib/providers");
+      await prepareBrowserLocalModel(localModel, (event) => {
+        if (typeof event.progress === "number" && Number.isFinite(event.progress)) {
+          setBrowserDownloadProgress(Math.max(0, Math.min(100, Math.round(event.progress))));
+        }
+        const file = event.file ? String(event.file).split("/").pop() : "";
+        if (event.status === "download") setBrowserDownloadStatus(file ? "Downloading " + file + "…" : "Downloading model files…");
+        else if (event.status === "progress") setBrowserDownloadStatus(file ? "Downloading " + file + "…" : "Downloading model files…");
+        else if (event.status === "initiate") setBrowserDownloadStatus(file ? "Starting download of " + file + "…" : "Starting download…");
+        else if (event.status === "done") setBrowserDownloadStatus(file ? "Downloaded " + file : "Download complete; preparing model…");
+      });
+      setBrowserDownloadProgress(100);
+      setBrowserDownloadStatus("Model downloaded and ready to use in this browser.");
+    } catch (error) {
+      setBrowserDownloadStatus("Download failed: " + (error instanceof Error ? error.message : String(error)));
+    } finally {
+      setBrowserDownloadBusy(false);
+    }
+  }
+
   async function connectCustomMcp() {
     const endpoint = (integrationSettings.mcpUrl ?? "").trim();
     const token = (integrationSettings.mcpToken ?? "").trim();
@@ -290,6 +318,11 @@ export function SettingsModal() {
             try { localStorage.setItem("blitzbot.browser-ai.model", model); } catch {}
             if (localAiEnabled) setPref({ autoRoute: false, manualChoice: { provider: "web-local", model } });
           }}><option value="onnx-community/Qwen2.5-Coder-0.5B-Instruct">Small · best compatibility (recommended)</option><option value="onnx-community/Qwen2.5-Coder-1.5B-Instruct">Medium · needs more memory</option><option value="onnx-community/Qwen2.5-Coder-3B-Instruct">Large · needs substantial device memory</option></select></label>
+          <div className="browser-model-download">
+            <button type="button" className="primary-button" disabled={browserDownloadBusy} onClick={() => void downloadBrowserModel()}>{browserDownloadBusy ? "Downloading model…" : "Download browser model"}</button>
+            {browserDownloadBusy && <progress className="browser-model-progress" max={100} value={browserDownloadProgress} aria-label="Browser model download progress" />}
+            {browserDownloadStatus && <p className="field-hint" role="status">{browserDownloadStatus}{browserDownloadBusy && browserDownloadProgress > 0 ? " (" + browserDownloadProgress + "%)" : ""}</p>}
+          </div>
           <p className="field-hint">This provider is only selected when you enable it. Turn it off to return to automatic routing. Device compatibility and memory use vary.</p>
         </section>
 
