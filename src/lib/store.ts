@@ -182,14 +182,12 @@ function loadPrefs(): Prefs {
     const raw = localStorage.getItem(PREFS_STORAGE);
     if (raw) {
       const prefs = { ...base, ...JSON.parse(raw) } as Prefs;
-      // Older browser-local Qwen models can require several GB of memory and fail
-      // before generation starts on ordinary laptops. Move existing local-model
-      // selections to the supported 0.5B quantized model so the feature can start.
-      if (prefs.manualChoice?.provider === "web-local" && [
-        "onnx-community/Qwen2.5-Coder-1.5B-Instruct",
-        "onnx-community/Qwen2.5-Coder-3B-Instruct",
-      ].includes(prefs.manualChoice.model)) {
-        prefs.manualChoice = { provider: "web-local", model: "onnx-community/Qwen2.5-Coder-0.5B-Instruct" };
+      // The 3B browser model has been removed because it cannot reliably allocate
+      // its ONNX session on typical devices. Keep 1.5B selections intact and
+      // migrate only the removed 3B option to the supported medium model.
+      if (prefs.manualChoice?.provider === "web-local" &&
+        prefs.manualChoice.model === "onnx-community/Qwen2.5-Coder-3B-Instruct") {
+        prefs.manualChoice = { provider: "web-local", model: "onnx-community/Qwen2.5-Coder-1.5B-Instruct" };
         localStorage.setItem(PREFS_STORAGE, JSON.stringify(prefs));
       }
       return prefs;
