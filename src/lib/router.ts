@@ -106,8 +106,8 @@ export interface ModelGroup {
  */
 export function manualGroups(keys: Keys, models: ModelMap): ModelGroup[] {
   const groups: ModelGroup[] = [{ provider: "web-local", label: "Browser AI (runs on this device)", options: [
-    { id: "onnx-community/Qwen2.5-Coder-1.5B-Instruct", label: "Small coding model · ~2B class" },
-    { id: "onnx-community/Qwen2.5-Coder-3B-Instruct", label: "Larger coding model · up to ~6 GB memory" },
+    { id: "onnx-community/Qwen2.5-Coder-0.5B-Instruct", label: "Small coding model · best compatibility" },
+    { id: "onnx-community/Qwen2.5-Coder-1.5B-Instruct", label: "Medium coding model · needs more memory" },
   ] }];
   if (keys.anthropic) {
     groups.push({
