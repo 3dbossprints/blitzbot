@@ -305,7 +305,7 @@ export function SettingsModal() {
         {activeSection === "ai" && <>
         <section id="settings-ai" className="browser-ai-settings settings-section"><h3><SettingsIcon name="cpu" /> Browser-local AI</h3>
           <div className="field-row"><span className="field-label-strong">Browser-local coding AI (optional)</span></div>
-          <p className="field-hint">Runs in this browser with no personal API key. Model weights download only when first enabled and used. First load may take a while and needs storage and available memory.</p>
+          <p className="field-hint">Runs on this device without an API key. You can still use your configured API-key providers at any time: choose one in “Model — everything your keys unlock” below. Switching providers does not remove your saved keys. Model weights download only when first used.</p>
           <label className="check"><input type="checkbox" checked={localAiEnabled} onChange={(e) => {
             const enabled = e.target.checked; setLocalAiEnabled(enabled);
             try { localStorage.setItem("blitzbot.browser-ai.enabled", String(enabled)); } catch {}
