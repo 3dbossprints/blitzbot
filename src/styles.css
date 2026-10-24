@@ -2672,3 +2672,145 @@ html, body {
     padding-right: 7px;
   }
 }
+
+
+/* Mobile chat refinements: keep navigation reachable without squeezing the page,
+   and preserve a usable conversation + composer on narrow phone screens. */
+@media (max-width: 680px) {
+  html, body, #root {
+    width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+  }
+  .dedicated-chat-page {
+    height: 100%;
+    height: 100dvh;
+  }
+  .dedicated-chat-page .studio-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 9px;
+    padding: 12px 14px;
+  }
+  .dedicated-chat-page .wordmark {
+    align-self: flex-start;
+    font-size: 19px;
+  }
+  .dedicated-chat-page .studio-project {
+    position: absolute;
+    right: 14px;
+    top: 17px;
+    max-width: 48%;
+    text-align: right;
+    font-size: 12px;
+  }
+  .dedicated-chat-page .studio-actions {
+    width: 100%;
+    max-width: 100%;
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    gap: 7px;
+    padding: 2px 0 5px;
+  }
+  .dedicated-chat-page .studio-actions::-webkit-scrollbar {
+    display: none;
+  }
+  .dedicated-chat-page .studio-actions .btn-sm {
+    flex: 0 0 auto;
+    min-height: 42px;
+    padding: 9px 13px;
+    font-size: 13px;
+  }
+  .dedicated-chat-main {
+    min-height: 0;
+    padding: 0;
+  }
+  .dedicated-chat-intro {
+    padding: 18px 16px 12px;
+  }
+  .dedicated-chat-intro h1 {
+    font-size: clamp(30px, 8vw, 42px);
+    line-height: 1.08;
+    margin: 8px 0 12px;
+    overflow-wrap: anywhere;
+  }
+  .dedicated-chat-intro p {
+    font-size: 15px;
+    line-height: 1.5;
+    margin: 0;
+  }
+  .dedicated-chat-main > .chat-pane {
+    flex: 1 1 0;
+    min-height: 0;
+  }
+  .dedicated-chat-main .pane-head {
+    padding: 10px 16px;
+  }
+  .dedicated-chat-main .chat-scroll {
+    padding: 14px 16px;
+    gap: 18px;
+    scrollbar-width: thin;
+  }
+  .dedicated-chat-main .msg-body {
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  .dedicated-chat-main .msg-role {
+    font-size: 11px;
+  }
+  .dedicated-chat-main .receipt {
+    font-size: 10px;
+    overflow-wrap: anywhere;
+  }
+  .dedicated-chat-main .chat-controls {
+    padding: 0 12px 6px;
+  }
+  .dedicated-chat-main .chat-input-row {
+    gap: 7px;
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+    background: var(--gesso);
+  }
+  .app-dark .dedicated-chat-main .chat-input-row {
+    background: var(--studio);
+  }
+  .dedicated-chat-main .chat-input-row input {
+    width: 0;
+    min-width: 0;
+    font-size: 15px;
+    padding: 12px 10px;
+  }
+  .dedicated-chat-main .chat-input-row .btn-primary {
+    min-height: 48px;
+    padding: 10px 14px;
+  }
+  .dedicated-chat-main .chat-plus-button {
+    min-width: 48px;
+    min-height: 48px;
+  }
+  .dedicated-chat-main .chat-attach-menu {
+    max-width: calc(100vw - 24px);
+  }
+}
+@media (max-width: 380px) {
+  .dedicated-chat-intro {
+    padding-left: 13px;
+    padding-right: 13px;
+  }
+  .dedicated-chat-main .chat-scroll {
+    padding-left: 13px;
+    padding-right: 13px;
+  }
+  .dedicated-chat-main .chat-input-row {
+    gap: 5px;
+    padding-left: 7px;
+    padding-right: 7px;
+  }
+  .dedicated-chat-main .chat-input-row .btn-primary {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+}
