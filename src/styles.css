@@ -2441,3 +2441,234 @@ html, body {
   height: 8px;
   accent-color: var(--accent, #6667d8);
 }
+
+
+/* Mobile workspace: make the controls thumb-friendly and each work area usable. */
+@media (max-width: 680px) {
+  html, body, #root, .app {
+    min-height: 100%;
+    height: 100%;
+  }
+  .studio {
+    height: 100dvh;
+    min-height: 0;
+  }
+  .studio-bar {
+    position: sticky;
+    top: 0;
+    z-index: 12;
+    flex: 0 0 auto;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 8px 12px;
+    padding: 10px 12px;
+    background: var(--studio);
+    border-bottom: 1px solid var(--line-dark);
+  }
+  .studio-bar .wordmark {
+    font-size: 17px;
+  }
+  .studio-project {
+    min-width: 0;
+    width: auto;
+    order: initial;
+    font-size: 11px;
+    text-align: right;
+  }
+  .studio-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    gap: 7px;
+    max-width: 100%;
+    overflow-x: auto;
+    padding: 2px 0 4px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .studio-actions::-webkit-scrollbar {
+    display: none;
+  }
+  .studio-actions .btn-sm {
+    flex: 0 0 auto;
+    min-height: 36px;
+    padding: 8px 11px;
+    font-size: 12px;
+    border-radius: 9px;
+  }
+  .studio-main,
+  .studio-main.compare-layout {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 0;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  .studio-main > .pane,
+  .studio-main.compare-layout > .pane {
+    display: flex;
+    flex: 0 0 auto;
+    width: 100%;
+    min-width: 0;
+    min-height: 46dvh;
+    border-bottom: 1px solid var(--line-dark);
+  }
+  .studio-main > .chat-pane {
+    min-height: 58dvh;
+    order: 0;
+  }
+  .studio-main > .editor-pane {
+    min-height: 52dvh;
+    order: 1;
+  }
+  .studio-main > .preview-pane {
+    min-height: 58dvh;
+    order: 2;
+  }
+  .studio-main .pane-head {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    min-height: 40px;
+    padding: 10px 12px;
+    background: var(--studio);
+  }
+  .chat-scroll {
+    padding: 14px 12px;
+    gap: 16px;
+  }
+  .msg-body {
+    font-size: 14px;
+    line-height: 1.65;
+  }
+  .chat-controls {
+    gap: 8px;
+    padding: 8px 10px;
+  }
+  .chat-input-row {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 7px;
+    padding: 10px;
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+    background: var(--studio);
+  }
+  .chat-input-row-enhanced > input {
+    min-width: 0;
+    min-height: 42px;
+    font-size: 16px;
+    padding: 10px 11px;
+  }
+  .chat-input-row .btn-primary,
+  .chat-input-row .chat-plus-button {
+    min-height: 42px;
+    min-width: 42px;
+  }
+  .logbar {
+    flex: 0 0 auto;
+    position: relative;
+    z-index: 6;
+  }
+  .logbar-head {
+    min-height: 40px;
+    padding: 9px 12px;
+  }
+  .modal-backdrop:has(.modal[aria-label="Settings"]) .modal {
+    padding: 0 14px max(20px, env(safe-area-inset-bottom));
+  }
+  .modal-backdrop:has(.modal[aria-label="Settings"]) .modal-head {
+    top: 0;
+    padding: max(12px, env(safe-area-inset-top)) 0 12px;
+  }
+  .settings-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .settings-section-nav {
+    top: 58px;
+    gap: 7px;
+    margin: 0 -2px;
+    padding: 9px 2px;
+  }
+  .settings-section-nav button {
+    min-height: 40px;
+    padding: 9px 12px;
+    font-size: 12px;
+    border-radius: 9px;
+  }
+  .settings-content {
+    min-width: 0;
+  }
+  .settings-section {
+    padding-bottom: 24px;
+  }
+  .settings-section .field input,
+  .settings-section .field select,
+  .settings-section .field textarea {
+    min-height: 42px;
+    font-size: 16px;
+  }
+  .settings-section .check {
+    align-items: center;
+    gap: 11px;
+    min-height: 42px;
+  }
+  .settings-section .check input {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 auto;
+  }
+  .browser-model-download .primary-button,
+  .settings-section .btn-primary,
+  .settings-section .btn-ghost {
+    min-height: 42px;
+  }
+  .landing {
+    min-height: 100dvh;
+    height: auto;
+    padding: max(18px, env(safe-area-inset-top)) 18px max(24px, env(safe-area-inset-bottom));
+  }
+  .landing-bar {
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .hero-q {
+    font-size: clamp(2.25rem, 11vw, 3.2rem);
+    margin-bottom: 28px;
+  }
+  .hero-input-wrap {
+    gap: 10px;
+  }
+  .hero-go {
+    min-height: 44px;
+  }
+  .landing-chat-card {
+    margin: 22px 0;
+    padding: 15px;
+    border-radius: 12px;
+  }
+}
+@media (max-width: 380px) {
+  .studio-actions .btn-sm {
+    padding: 7px 9px;
+    font-size: 11px;
+  }
+  .studio-project {
+    font-size: 10px;
+  }
+  .chat-input-row {
+    gap: 5px;
+    padding-left: 7px;
+    padding-right: 7px;
+  }
+}
